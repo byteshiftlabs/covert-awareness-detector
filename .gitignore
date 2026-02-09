@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# Results and outputs
+results/*.pkl
+results/*.pth
+results/*.h5
+results/*.json
+results/*.csv
+!results/.gitkeep
+
+# Trained models
+src/models/*.pkl
+src/models/*.pth
+src/models/*.h5
+src/models/*.joblib
+!src/models/.gitkeep
+
+# Data
+data/
+*.nii
+*.nii.gz
+
+# Documentation builds
+docs/_build/
+docs/_autosummary/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
