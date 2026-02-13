@@ -4,7 +4,7 @@ Machine learning models for detecting covert consciousness from fMRI data during
 
 ## Overview
 
-Detects hidden awareness in behaviorally unresponsive patients using the Michigan Human Anesthesia fMRI Dataset. Implements deep learning classifiers (CNN, GNN) to distinguish consciousness states during propofol sedation.
+Detects hidden awareness in behaviorally unresponsive patients using the Michigan Human Anesthesia fMRI Dataset. Implements machine learning classifiers to distinguish consciousness states during propofol sedation.
 
 **Dataset**: [OpenNeuro ds006623](https://openneuro.org/datasets/ds006623) - 26 subjects, mental imagery tasks, graded sedation levels
 
@@ -32,9 +32,9 @@ python src/train_improved.py
 
 ## Models
 
-- **Baseline**: Logistic Regression, SVM, Random Forest
-- **CNN**: 2D convolutions on connectivity matrices
-- **GNN**: Graph networks on brain connectivity graphs
+- **Logistic Regression**: L2-regularized with balanced class weights
+- **Random Forest**: 100 trees with balanced sampling
+- **SVM**: RBF kernel for non-linear classification
 - **Evaluation**: Leave-One-Subject-Out cross-validation (26 folds)
 
 ## Citation
