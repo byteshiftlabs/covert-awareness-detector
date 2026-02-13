@@ -13,10 +13,8 @@ Improvements:
 import sys
 import numpy as np
 from sklearn.feature_selection import VarianceThreshold, SelectKBest, f_classif
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC
+from sklearn.impute import SimpleImputer
+
 from data_loader import load_subject_all_conditions
 from features import extract_all_features
 from models import leave_one_subject_out_cv
@@ -25,19 +23,19 @@ from config import SUBJECTS, CONSCIOUS_CONDITIONS
 print("="*70)
 print("IMPROVED CONSCIOUSNESS DETECTION MODEL")
 print("="*70)
-print(f"Dataset: OpenNeuro ds006623")
+print("Dataset: OpenNeuro ds006623")
 print(f"Subjects: {len(SUBJECTS)}")
-print(f"Feature improvements: 18 features (ISD + graph + statistical)")
+print("Feature improvements: 18 features (ISD + graph + statistical)")
 print()
 
 # Select subjects for training
 if len(sys.argv) > 1 and sys.argv[1] == '--quick':
     train_subjects = SUBJECTS[:5]
-    print(f"QUICK MODE: Using first 5 subjects\n")
+    print("QUICK MODE: Using first 5 subjects\n")
 else:
     train_subjects = SUBJECTS
     print(f"FULL MODE: Using all {len(train_subjects)} subjects")
-    print(f"This will take ~10-15 minutes\n")
+    print("This will take ~10-15 minutes\n")
 
 # Load data
 print("Step 1/5: Loading data...")
@@ -45,19 +43,19 @@ all_features = []
 
 for idx, subject in enumerate(train_subjects):
     print(f"  [{idx+1}/{len(train_subjects)}] Loading {subject}...")
-    all_fc = load_subject_all_conditions(subject)
-    
+    all_connectivity_matrices = load_subject_all_conditions(subject)
+
     for cond_idx in range(7):
-        fc = all_fc[cond_idx]
-        features = extract_all_features(fc)
-        
+        connectivity_matrix = all_connectivity_matrices[cond_idx]
+        features = extract_all_features(connectivity_matrix)
+
         # Don't use full connectivity (99,235 dims) - too high dimensional
         features.pop('connectivity', None)
-        
+
         features['subject'] = subject
         features['condition'] = cond_idx
         features['label'] = 1 if cond_idx in CONSCIOUS_CONDITIONS else 0
-        
+
         all_features.append(features)
 
 print(f"✓ Loaded {len(all_features)} samples\n")
@@ -66,7 +64,7 @@ print(f"✓ Loaded {len(all_features)} samples\n")
 print("Step 2/5: Preparing features...")
 
 # Extract numeric features (exclude metadata)
-feature_names = [k for k in all_features[0].keys() 
+feature_names = [k for k in all_features[0].keys()
                  if k not in ['subject', 'condition', 'label', 'connectivity']]
 
 X = np.array([[f[name] for name in feature_names] for f in all_features])
@@ -76,18 +74,18 @@ subject_ids = np.array([f['subject'] for f in all_features])
 print(f"  Original features: {X.shape[1]} ({len(feature_names)} features)")
 print(f"  Features: {', '.join(feature_names[:5])}...")
 print(f"  Samples: {X.shape[0]}")
-print(f"    Conscious: {np.sum(y==1)}")
-print(f"    Unconscious: {np.sum(y==0)}")
+print(f"    Conscious: {np.sum(y == 1)}")
+print(f"    Unconscious: {np.sum(y == 0)}")
 
 # Handle NaN/Inf values
-from sklearn.impute import SimpleImputer
 nan_count = np.isnan(X).sum()
 if nan_count > 0:
-    print(f"  NaN values detected: {nan_count} ({nan_count/X.size*100:.2f}%)")
-    print(f"  Imputing with median values...")
+    pct = nan_count/X.size*100
+    print(f"  NaN values detected: {nan_count} ({pct:.2f}%)")
+    print("  Imputing with median values...")
     imputer = SimpleImputer(strategy='median')
     X = imputer.fit_transform(X)
-    print(f"  ✓ NaN values handled")
+    print("✓ NaN values handled")
 
 # Step 3: Feature selection
 print("\nStep 3/5: Feature selection...")
@@ -96,7 +94,10 @@ print("\nStep 3/5: Feature selection...")
 selector_variance = VarianceThreshold(threshold=0.01)
 X_var = selector_variance.fit_transform(X)
 selected_mask = selector_variance.get_support()
-selected_features = [name for name, keep in zip(feature_names, selected_mask) if keep]
+selected_features = [
+    name for name, keep
+    in zip(feature_names, selected_mask) if keep
+]
 
 print(f"  After variance threshold: {X_var.shape[1]} features")
 print(f"  Kept: {', '.join(selected_features[:8])}...")
@@ -108,16 +109,19 @@ X_selected = selector_kbest.fit_transform(X_var, y)
 
 # Get feature names
 kbest_mask = selector_kbest.get_support()
-final_features = [name for name, keep in zip(selected_features, kbest_mask) if keep]
+final_features = [
+    name for name, keep
+    in zip(selected_features, kbest_mask) if keep
+]
 
 print(f"  After SelectKBest (k={k}): {X_selected.shape[1]} features")
-print(f"  Final features:")
+print("  Final features:")
 for i, name in enumerate(final_features):
     score = selector_kbest.scores_[i]
     print(f"    {i+1}. {name:20s} (F-score: {score:.2f})")
 
 # Step 4: Train models
-print(f"\nStep 4/5: Training models with LOSO cross-validation...")
+print("\nStep 4/5: Training models with LOSO cross-validation...")
 print()
 
 # Test multiple models
@@ -160,7 +164,10 @@ results['svm'] = leave_one_subject_out_cv(
 print("\n" + "="*70)
 print("FINAL RESULTS")
 print("="*70)
-print(f"{'Model':<20} {'Accuracy':<12} {'Precision':<12} {'Recall':<12} {'F1':<12} {'ROC-AUC':<12}")
+print(
+    f"{'Model':<20} {'Accuracy':<12} {'Precision':<12} "
+    f"{'Recall':<12} {'F1':<12} {'ROC-AUC':<12}"
+)
 print("-"*70)
 
 best_model = None
@@ -169,14 +176,14 @@ best_acc = 0
 for model_name, result in results.items():
     metrics = result['metrics']
     acc = metrics['accuracy']
-    
+
     print(f"{model_name:<20} "
           f"{metrics['accuracy']:<12.3f} "
           f"{metrics['precision']:<12.3f} "
           f"{metrics['recall']:<12.3f} "
           f"{metrics['f1']:<12.3f} "
           f"{metrics['roc_auc']:<12.3f}")
-    
+
     if acc > best_acc:
         best_acc = acc
         best_model = model_name
@@ -186,29 +193,29 @@ print(f"Best model: {best_model.upper()} with {best_acc:.1%} accuracy")
 print()
 
 # Show confusion matrix for best model
-print(f"Confusion Matrix ({best_model}):")
-cm = results[best_model]['metrics']['confusion_matrix']
-print(f"                  Predicted")
-print(f"               Uncon  Consc")
-print(f"Actual  Uncon  {cm[0,0]:5d}  {cm[0,1]:5d}")
-print(f"        Consc  {cm[1,0]:5d}  {cm[1,1]:5d}")
+print("Confusion Matrix ({}):".format(best_model))
+confusion_matrix = results[best_model]['metrics']['confusion_matrix']
+print("                  Predicted")
+print("               Unconscious  Conscious")
+print(f"Actual  Unconscious  {confusion_matrix[0, 0]:5d}  {confusion_matrix[0, 1]:5d}")
+print(f"        Conscious    {confusion_matrix[1, 0]:5d}  {confusion_matrix[1, 1]:5d}")
 print()
 
 # Interpret results
 print("INTERPRETATION:")
 if best_acc >= 0.80:
     print(f"✓ EXCELLENT: {best_acc:.1%} accuracy exceeds 80% threshold")
-    print(f"  Model successfully detects covert consciousness")
+    print("  Model successfully detects covert consciousness")
 elif best_acc >= 0.70:
     print(f"✓ GOOD: {best_acc:.1%} accuracy is clinically useful")
-    print(f"  Model shows strong discrimination between states")
+    print("  Model shows strong discrimination between states")
 elif best_acc >= 0.60:
     print(f"⚠ MODERATE: {best_acc:.1%} accuracy shows some discrimination")
-    print(f"  Model needs improvement for clinical use")
+    print("  Model needs improvement for clinical use")
 else:
     print(f"✗ POOR: {best_acc:.1%} accuracy is too low")
-    print(f"  Model barely better than chance (50%)")
-    print(f"  Need different features or more data")
+    print("  Model barely better than chance (50%)")
+    print("  Need different features or more data")
 
 print()
 print("="*70)
