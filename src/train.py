@@ -58,8 +58,8 @@ def main():
             print(f"  Processing subject {subj_idx + 1}/{len(SUBJECTS)}...")
 
         for cond_idx in range(7):
-            fc = all_fc[subj_idx, cond_idx]
-            features = extract_all_features(fc)
+            connectivity_matrix = all_fc[subj_idx, cond_idx]
+            features = extract_all_features(connectivity_matrix)
 
             features['subject'] = subject
             features['condition'] = cond_idx

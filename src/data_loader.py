@@ -85,33 +85,33 @@ def compute_connectivity(timeseries: pd.DataFrame) -> np.ndarray:
 
 def load_condition_0(subject: str) -> np.ndarray:
     """Condition 0: rest_run-1 (baseline resting state)."""
-    ts = load_timeseries(subject, "rest", 1)
+    timeseries = load_timeseries(subject, "rest", 1)
     motion = load_motion(subject, "rest", 1)
-    ts_filtered = filter_by_motion(ts, motion)
-    return compute_connectivity(ts_filtered)
+    timeseries_filtered = filter_by_motion(timeseries, motion)
+    return compute_connectivity(timeseries_filtered)
 
 
 def load_condition_1(subject: str) -> np.ndarray:
     """Condition 1: imagery_run-1 (awake, pre-sedation)."""
-    ts = load_timeseries(subject, "imagery", 1)
+    timeseries = load_timeseries(subject, "imagery", 1)
     motion = load_motion(subject, "imagery", 1)
-    ts_filtered = filter_by_motion(ts, motion)
-    return compute_connectivity(ts_filtered)
+    timeseries_filtered = filter_by_motion(timeseries, motion)
+    return compute_connectivity(timeseries_filtered)
 
 
 def load_condition_2(subject: str) -> np.ndarray:
     """Condition 2: imagery_run-2 PRE-LOR (before unconsciousness)."""
     lor_time = LOR_TIME[subject]
 
-    ts = load_timeseries(subject, "imagery", 2)
+    timeseries = load_timeseries(subject, "imagery", 2)
     motion = load_motion(subject, "imagery", 2)
 
     # Take timepoints BEFORE lor_time
-    ts_pre = ts.iloc[:lor_time]
+    timeseries_pre = timeseries.iloc[:lor_time]
     motion_pre = motion.iloc[:lor_time]
 
-    ts_filtered = filter_by_motion(ts_pre, motion_pre)
-    return compute_connectivity(ts_filtered)
+    timeseries_filtered = filter_by_motion(timeseries_pre, motion_pre)
+    return compute_connectivity(timeseries_filtered)
 
 
 def load_condition_3(subject: str) -> np.ndarray:
@@ -128,39 +128,39 @@ def load_condition_3(subject: str) -> np.ndarray:
     ror_time = ROR_TIME[subject]
 
     # Load both runs
-    ts2 = load_timeseries(subject, "imagery", 2)
-    motion2 = load_motion(subject, "imagery", 2)
-    ts3 = load_timeseries(subject, "imagery", 3)
-    motion3 = load_motion(subject, "imagery", 3)
+    timeseries_run2 = load_timeseries(subject, "imagery", 2)
+    motion_run2 = load_motion(subject, "imagery", 2)
+    timeseries_run3 = load_timeseries(subject, "imagery", 3)
+    motion_run3 = load_motion(subject, "imagery", 3)
 
     if subject not in SPECIAL_SUBJECTS:
         # Normal case: concatenate segments
         # run-2: from (lor + 375) to end
-        ts2_lor = ts2.iloc[lor_time + TRANSITION_BUFFER:]
-        motion2_lor = motion2.iloc[lor_time + TRANSITION_BUFFER:]
+        timeseries_run2_lor = timeseries_run2.iloc[lor_time + TRANSITION_BUFFER:]
+        motion_run2_lor = motion_run2.iloc[lor_time + TRANSITION_BUFFER:]
 
         # run-3: from start to (ror - 375)
-        ts3_lor = ts3.iloc[:ror_time - TRANSITION_BUFFER]
-        motion3_lor = motion3.iloc[:ror_time - TRANSITION_BUFFER]
+        timeseries_run3_lor = timeseries_run3.iloc[:ror_time - TRANSITION_BUFFER]
+        motion_run3_lor = motion_run3.iloc[:ror_time - TRANSITION_BUFFER]
 
         # Concatenate
-        ts_combined = pd.concat([ts2_lor, ts3_lor], ignore_index=True)
+        timeseries_combined = pd.concat([timeseries_run2_lor, timeseries_run3_lor], ignore_index=True)
         motion_combined = pd.concat(
-            [motion2_lor, motion3_lor], ignore_index=True
+            [motion_run2_lor, motion_run3_lor], ignore_index=True
         )
     else:
         # sub-29: all of run-3 is LOR
-        ts_combined = pd.concat([
-            ts2.iloc[lor_time + TRANSITION_BUFFER:],
-            ts3
+        timeseries_combined = pd.concat([
+            timeseries_run2.iloc[lor_time + TRANSITION_BUFFER:],
+            timeseries_run3
         ], ignore_index=True)
         motion_combined = pd.concat([
-            motion2.iloc[lor_time + TRANSITION_BUFFER:],
-            motion3
+            motion_run2.iloc[lor_time + TRANSITION_BUFFER:],
+            motion_run3
         ], ignore_index=True)
 
-    ts_filtered = filter_by_motion(ts_combined, motion_combined)
-    return compute_connectivity(ts_filtered)
+    timeseries_filtered = filter_by_motion(timeseries_combined, motion_combined)
+    return compute_connectivity(timeseries_filtered)
 
 
 def load_condition_4(subject: str) -> np.ndarray:
@@ -175,26 +175,26 @@ def load_condition_4(subject: str) -> np.ndarray:
 
     ror_time = ROR_TIME[subject]
 
-    ts = load_timeseries(subject, "imagery", 3)
+    timeseries = load_timeseries(subject, "imagery", 3)
     motion = load_motion(subject, "imagery", 3)
 
-    ts_post = ts.iloc[ror_time + 1:]
+    timeseries_post = timeseries.iloc[ror_time + 1:]
     motion_post = motion.iloc[ror_time + 1:]
 
-    if len(ts_post) == 0:
+    if len(timeseries_post) == 0:
         return np.full((N_ROIS, N_ROIS), np.nan)
 
-    ts_filtered = filter_by_motion(ts_post, motion_post)
-    return compute_connectivity(ts_filtered)
+    timeseries_filtered = filter_by_motion(timeseries_post, motion_post)
+    return compute_connectivity(timeseries_filtered)
 
 
 def load_condition_5(subject: str) -> np.ndarray:
     """Condition 5: imagery_run-4 (recovery)."""
     try:
-        ts = load_timeseries(subject, "imagery", 4)
+        timeseries = load_timeseries(subject, "imagery", 4)
         motion = load_motion(subject, "imagery", 4)
-        ts_filtered = filter_by_motion(ts, motion)
-        return compute_connectivity(ts_filtered)
+        timeseries_filtered = filter_by_motion(timeseries, motion)
+        return compute_connectivity(timeseries_filtered)
     except FileNotFoundError:
         return np.full((N_ROIS, N_ROIS), np.nan)
 
@@ -202,10 +202,10 @@ def load_condition_5(subject: str) -> np.ndarray:
 def load_condition_6(subject: str) -> np.ndarray:
     """Condition 6: rest_run-2 (recovery resting state)."""
     try:
-        ts = load_timeseries(subject, "rest", 2)
+        timeseries = load_timeseries(subject, "rest", 2)
         motion = load_motion(subject, "rest", 2)
-        ts_filtered = filter_by_motion(ts, motion)
-        return compute_connectivity(ts_filtered)
+        timeseries_filtered = filter_by_motion(timeseries, motion)
+        return compute_connectivity(timeseries_filtered)
     except FileNotFoundError:
         return np.full((N_ROIS, N_ROIS), np.nan)
 
@@ -218,7 +218,7 @@ def load_subject_all_conditions(subject: str) -> np.ndarray:
         Array of shape (7, 446, 446) with connectivity matrices
         NaN-filled if data missing
     """
-    fc = np.zeros((7, N_ROIS, N_ROIS))
+    connectivity_matrices = np.zeros((7, N_ROIS, N_ROIS))
 
     loaders = [
         load_condition_0, load_condition_1, load_condition_2,
@@ -228,12 +228,12 @@ def load_subject_all_conditions(subject: str) -> np.ndarray:
 
     for i, loader in enumerate(loaders):
         try:
-            fc[i] = loader(subject)
+            connectivity_matrices[i] = loader(subject)
         except Exception as e:
             print(f"  Warning: {subject} condition {i} failed: {e}")
-            fc[i] = np.full((N_ROIS, N_ROIS), np.nan)
+            connectivity_matrices[i] = np.full((N_ROIS, N_ROIS), np.nan)
 
-    return fc
+    return connectivity_matrices
 
 
 def load_all_subjects() -> Tuple[np.ndarray, list]:
@@ -241,14 +241,14 @@ def load_all_subjects() -> Tuple[np.ndarray, list]:
     Load connectivity matrices for all 25 subjects.
 
     Returns:
-        fc: (25, 7, 446, 446) connectivity matrices
+        connectivity_matrices: (25, 7, 446, 446) connectivity matrices
         subjects: List of subject IDs
     """
     n_subjects = len(SUBJECTS)
-    fc = np.zeros((n_subjects, 7, N_ROIS, N_ROIS))
+    connectivity_matrices = np.zeros((n_subjects, 7, N_ROIS, N_ROIS))
 
     for i, subject in enumerate(SUBJECTS):
         print(f"[{i+1}/{n_subjects}] Loading {subject}...")
-        fc[i] = load_subject_all_conditions(subject)
+        connectivity_matrices[i] = load_subject_all_conditions(subject)
 
-    return fc, SUBJECTS
+    return connectivity_matrices, SUBJECTS

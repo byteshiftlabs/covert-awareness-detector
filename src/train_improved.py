@@ -43,11 +43,11 @@ all_features = []
 
 for idx, subject in enumerate(train_subjects):
     print(f"  [{idx+1}/{len(train_subjects)}] Loading {subject}...")
-    all_fc = load_subject_all_conditions(subject)
+    all_connectivity_matrices = load_subject_all_conditions(subject)
 
     for cond_idx in range(7):
-        fc = all_fc[cond_idx]
-        features = extract_all_features(fc)
+        connectivity_matrix = all_connectivity_matrices[cond_idx]
+        features = extract_all_features(connectivity_matrix)
 
         # Don't use full connectivity (99,235 dims) - too high dimensional
         features.pop('connectivity', None)
@@ -194,11 +194,11 @@ print()
 
 # Show confusion matrix for best model
 print("Confusion Matrix ({}):".format(best_model))
-cm = results[best_model]['metrics']['confusion_matrix']
+confusion_matrix = results[best_model]['metrics']['confusion_matrix']
 print("                  Predicted")
-print("               Uncon  Consc")
-print(f"Actual  Uncon  {cm[0, 0]:5d}  {cm[0, 1]:5d}")
-print(f"        Consc  {cm[1, 0]:5d}  {cm[1, 1]:5d}")
+print("               Unconscious  Conscious")
+print(f"Actual  Unconscious  {confusion_matrix[0, 0]:5d}  {confusion_matrix[0, 1]:5d}")
+print(f"        Conscious    {confusion_matrix[1, 0]:5d}  {confusion_matrix[1, 1]:5d}")
 print()
 
 # Interpret results

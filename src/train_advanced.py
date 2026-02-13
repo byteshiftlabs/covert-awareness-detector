@@ -49,13 +49,13 @@ for idx, subject in enumerate(SUBJECTS):
     if (idx + 1) % 5 == 0 or idx == 0:
         print(f"  [{idx+1}/{len(SUBJECTS)}] {subject}...")
 
-    all_fc = load_subject_all_conditions(subject)
+    all_connectivity_matrices = load_subject_all_conditions(subject)
 
     for cond_idx in range(7):
-        fc = all_fc[cond_idx]
+        connectivity_matrix = all_connectivity_matrices[cond_idx]
 
         # Extract ALL features including full connectivity
-        features = extract_all_features(fc)
+        features = extract_all_features(connectivity_matrix)
 
         # Store connectivity separately for PCA
         conn_full = features['connectivity']  # 99,235 dims
@@ -262,13 +262,13 @@ best_metrics = None
 
 for threshold in np.arange(0.1, 0.95, 0.05):
     y_pred_thresh = (all_probas >= threshold).astype(int)
-    bal_acc = balanced_accuracy_score(all_labels, y_pred_thresh)
+    balanced_accuracy = balanced_accuracy_score(all_labels, y_pred_thresh)
 
-    if bal_acc > best_balanced_acc:
-        best_balanced_acc = bal_acc
+    if balanced_accuracy > best_balanced_acc:
+        best_balanced_acc = balanced_accuracy
         best_threshold = threshold
         best_metrics = {
-            'balanced_acc': bal_acc,
+            'balanced_acc': balanced_accuracy,
             'accuracy': accuracy_score(all_labels, y_pred_thresh),
             'recall_unconscious': recall_score(
                 all_labels, y_pred_thresh,
@@ -330,13 +330,13 @@ print(f"Recall (Unconscious): {metrics_default['recall_unconscious']:.3f}")
 print(f"Recall (Conscious):   {metrics_default['recall_conscious']:.3f}")
 print(f"ROC-AUC:              {metrics_default['roc_auc']:.3f}")
 print("\nConfusion Matrix:")
-print("              Uncon  Consc")
+print("              Unconscious  Conscious")
 print(
-    f"Actual Uncon  {cm_default[0, 0]:5d}  "
+    f"Actual Unconscious  {cm_default[0, 0]:5d}  "
     f"{cm_default[0, 1]:5d}"
 )
 print(
-    f"       Consc  {cm_default[1, 0]:5d}  "
+    f"       Conscious    {cm_default[1, 0]:5d}  "
     f"{cm_default[1, 1]:5d}"
 )
 
@@ -366,17 +366,17 @@ print(f"Recall (Conscious):   {best_metrics['recall_conscious']:.3f}")
 print(f"F1 Score:             {best_metrics['f1']:.3f}")
 print(f"ROC-AUC:              {best_metrics['roc_auc']:.3f}")
 
-cm = best_metrics['confusion_matrix']
+confusion_matrix = best_metrics['confusion_matrix']
 print("\nConfusion Matrix:")
-print("              Uncon  Consc")
+print("              Unconscious  Conscious")
 print(
-    f"Actual Uncon  {cm[0, 0]:5d}  "
-    f"{cm[0, 1]:5d}  \u2190 "
-    f"{cm[0, 0]}/{cm[0, 0] + cm[0, 1]} detected"
+    f"Actual Unconscious  {confusion_matrix[0, 0]:5d}  "
+    f"{confusion_matrix[0, 1]:5d}  ← "
+    f"{confusion_matrix[0, 0]}/{confusion_matrix[0, 0] + confusion_matrix[0, 1]} detected"
 )
 print(
-    f"       Consc  {cm[1, 0]:5d}  "
-    f"{cm[1, 1]:5d}"
+    f"       Conscious    {confusion_matrix[1, 0]:5d}  "
+    f"{confusion_matrix[1, 1]:5d}"
 )
 
 print(f"\n{'='*70}")

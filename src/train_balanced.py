@@ -44,11 +44,11 @@ for idx, subject in enumerate(train_subjects):
     if (idx + 1) % 5 == 0 or idx == 0:
         print(f"  [{idx+1}/{len(train_subjects)}] Loading {subject}...")
 
-    all_fc = load_subject_all_conditions(subject)
+    all_connectivity_matrices = load_subject_all_conditions(subject)
 
     for cond_idx in range(7):
-        fc = all_fc[cond_idx]
-        features = extract_all_features(fc)
+        connectivity_matrix = all_connectivity_matrices[cond_idx]
+        features = extract_all_features(connectivity_matrix)
         features.pop('connectivity', None)  # Remove high-dim features
 
         features['subject'] = subject
@@ -220,16 +220,16 @@ for threshold in np.arange(0.1, 0.9, 0.05):
     y_pred_thresh = (all_probas >= threshold).astype(int)
 
     # Calculate metrics
-    bal_acc = balanced_accuracy_score(all_labels, y_pred_thresh)
+    balanced_accuracy = balanced_accuracy_score(all_labels, y_pred_thresh)
     recall_0 = recall_score(all_labels, y_pred_thresh, pos_label=0)
     recall_1 = recall_score(all_labels, y_pred_thresh, pos_label=1)
 
     # Optimize for balanced accuracy (equal weight to both classes)
-    if bal_acc > best_balanced_acc:
-        best_balanced_acc = bal_acc
+    if balanced_accuracy > best_balanced_acc:
+        best_balanced_acc = balanced_accuracy
         best_threshold = threshold
         best_metrics = {
-            'balanced_acc': bal_acc,
+            'balanced_acc': balanced_accuracy,
             'accuracy': accuracy_score(all_labels, y_pred_thresh),
             'recall_unconscious': recall_0,
             'recall_conscious': recall_1,
@@ -296,15 +296,15 @@ print(f"F1 Score:          {metrics_default['f1']:.3f}")
 print(f"ROC-AUC:           {metrics_default['roc_auc']:.3f}")
 print("\nConfusion Matrix:")
 print("                 Predicted")
-print("              Uncon  Consc")
+print("              Unconscious  Conscious")
 print(
-    f"Actual Uncon  {cm_default[0, 0]:5d}  "
+    f"Actual Unconscious  {cm_default[0, 0]:5d}  "
     f"{cm_default[0, 1]:5d}  ← Only "
     f"{cm_default[0, 0]}/{cm_default[0, 0]+cm_default[0, 1]}"
     f" detected!"
 )
 print(
-    f"       Consc  {cm_default[1, 0]:5d}  "
+    f"       Conscious    {cm_default[1, 0]:5d}  "
     f"{cm_default[1, 1]:5d}"
 )
 
@@ -327,16 +327,16 @@ print(
 print(f"Recall (Conscious):   {best_metrics['recall_conscious']:.3f}")
 print(f"F1 Score:          {best_metrics['f1']:.3f}")
 print("\nConfusion Matrix:")
-cm = best_metrics['confusion_matrix']
+confusion_matrix = best_metrics['confusion_matrix']
 print("                 Predicted")
-print("              Uncon  Consc")
+print("              Unconscious  Conscious")
 print(
-    f"Actual Uncon  {cm[0, 0]:5d}  {cm[0, 1]:5d}"
-    f"  ← {cm[0, 0]}/{cm[0, 0]+cm[0, 1]} detected!"
-    f" (Improvement: +{cm[0, 0]-cm_default[0, 0]})"
+    f"Actual Unconscious  {confusion_matrix[0, 0]:5d}  {confusion_matrix[0, 1]:5d}"
+    f"  ← {confusion_matrix[0, 0]}/{confusion_matrix[0, 0]+confusion_matrix[0, 1]} detected!"
+    f" (Improvement: +{confusion_matrix[0, 0]-cm_default[0, 0]})"
 )
 print(
-    f"       Consc  {cm[1, 0]:5d}  {cm[1, 1]:5d}"
+    f"       Conscious    {confusion_matrix[1, 0]:5d}  {confusion_matrix[1, 1]:5d}"
 )
 
 print(f"\n{'='*70}")

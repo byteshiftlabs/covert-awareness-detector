@@ -23,11 +23,11 @@ all_features = []
 
 for subject in test_subjects:
     print(f"  Loading {subject}...")
-    all_fc = load_subject_all_conditions(subject)
+    all_connectivity_matrices = load_subject_all_conditions(subject)
 
     for cond_idx in range(7):
-        fc = all_fc[cond_idx]
-        features = extract_all_features(fc)
+        connectivity_matrix = all_connectivity_matrices[cond_idx]
+        features = extract_all_features(connectivity_matrix)
 
         features['subject'] = subject
         features['condition'] = cond_idx

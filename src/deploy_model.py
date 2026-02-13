@@ -32,10 +32,10 @@ def train_final_model():
     all_connectivity_matrices = []
 
     for subject in SUBJECTS:
-        all_fc = load_subject_all_conditions(subject)
+        all_connectivity_matrices = load_subject_all_conditions(subject)
         for cond_idx in range(7):
-            fc = all_fc[cond_idx]
-            features = extract_all_features(fc)
+            connectivity_matrix = all_connectivity_matrices[cond_idx]
+            features = extract_all_features(connectivity_matrix)
             all_connectivity_matrices.append(features['connectivity'])
             features['subject'] = subject
             features['condition'] = cond_idx
@@ -158,8 +158,8 @@ def predict_subject(subject, condition=None, model_path=None):
     conditions_to_predict = [condition] if condition is not None else range(7)
 
     for cond_idx in conditions_to_predict:
-        fc = all_fc[cond_idx]
-        features = extract_all_features(fc)
+        connectivity_matrix = all_fc[cond_idx]
+        features = extract_all_features(connectivity_matrix)
 
         # Extract features (same as training)
         feature_names = [
