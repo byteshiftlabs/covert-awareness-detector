@@ -12,10 +12,7 @@ Checks:
 
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend
-import matplotlib.pyplot as plt
 import warnings
-warnings.filterwarnings('ignore')
 
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
@@ -24,13 +21,15 @@ from sklearn.metrics import (
     accuracy_score, balanced_accuracy_score, confusion_matrix,
     recall_score, roc_auc_score
 )
-from sklearn.model_selection import learning_curve
 from imblearn.over_sampling import SMOTE
 import xgboost as xgb
 
 from data_loader import load_subject_all_conditions
 from features import extract_all_features
 from config import SUBJECTS, CONSCIOUS_CONDITIONS
+
+matplotlib.use('Agg')  # Non-interactive backend
+warnings.filterwarnings('ignore')
 
 print("="*70)
 print("OVERFITTING VALIDATION & FINAL EVALUATION")
@@ -47,15 +46,15 @@ all_connectivity_matrices = []
 for idx, subject in enumerate(SUBJECTS):
     if idx % 10 == 0:
         print(f"  {idx+1}/{len(SUBJECTS)}...")
-    
+
     all_fc = load_subject_all_conditions(subject)
-    
+
     for cond_idx in range(7):
         fc = all_fc[cond_idx]
         features = extract_all_features(fc)
         conn_full = features['connectivity']
         all_connectivity_matrices.append(conn_full)
-        
+
         features['subject'] = subject
         features['condition'] = cond_idx
         features['label'] = 1 if cond_idx in CONSCIOUS_CONDITIONS else 0
@@ -64,9 +63,16 @@ for idx, subject in enumerate(SUBJECTS):
 print(f"✓ Loaded {len(all_features)} samples\n")
 
 # Feature engineering
-feature_names_basic = [k for k in all_features[0].keys() 
-                       if k not in ['subject', 'condition', 'label', 'connectivity']]
-X_basic = np.array([[f[name] for name in feature_names_basic] for f in all_features])
+feature_names_basic = [
+    k for k in all_features[0].keys()
+    if k not in [
+        'subject', 'condition', 'label', 'connectivity'
+    ]
+]
+X_basic = np.array(
+    [[f[name] for name in feature_names_basic]
+     for f in all_features]
+)
 
 subject_ids = np.array([f['subject'] for f in all_features])
 y = np.array([f['label'] for f in all_features])
@@ -128,17 +134,31 @@ y_train_holdout = y[train_mask]
 X_test_holdout = X_combined[test_mask]
 y_test_holdout = y[test_mask]
 
-print(f"Train: {X_train_holdout.shape[0]} samples ({np.sum(y_train_holdout==0)} uncon, {np.sum(y_train_holdout==1)} con)")
-print(f"Test:  {X_test_holdout.shape[0]} samples ({np.sum(y_test_holdout==0)} uncon, {np.sum(y_test_holdout==1)} con)")
+print(
+    f"Train: {X_train_holdout.shape[0]} samples "
+    f"({np.sum(y_train_holdout == 0)} uncon, "
+    f"{np.sum(y_train_holdout == 1)} con)"
+)
+print(
+    f"Test:  {X_test_holdout.shape[0]} samples "
+    f"({np.sum(y_test_holdout == 0)} uncon, "
+    f"{np.sum(y_test_holdout == 1)} con)"
+)
 print()
 
 # Apply SMOTE to training data
 n_minority = np.sum(y_train_holdout == 0)
 k_neighbors = min(5, n_minority - 1)
 smote = SMOTE(random_state=42, k_neighbors=k_neighbors)
-X_train_balanced, y_train_balanced = smote.fit_resample(X_train_holdout, y_train_holdout)
+X_train_balanced, y_train_balanced = smote.fit_resample(
+    X_train_holdout, y_train_holdout
+)
 
-print(f"After SMOTE: {X_train_balanced.shape[0]} samples ({np.sum(y_train_balanced==0)} uncon, {np.sum(y_train_balanced==1)} con)")
+print(
+    f"After SMOTE: {X_train_balanced.shape[0]} samples "
+    f"({np.sum(y_train_balanced == 0)} uncon, "
+    f"{np.sum(y_train_balanced == 1)} con)"
+)
 print()
 
 # Standardize
@@ -147,7 +167,10 @@ X_train_scaled = scaler.fit_transform(X_train_balanced)
 X_test_scaled = scaler.transform(X_test_holdout)
 
 # Train XGBoost
-scale_pos_weight = np.sum(y_train_balanced == 0) / np.sum(y_train_balanced == 1)
+scale_pos_weight = (
+    np.sum(y_train_balanced == 0)
+    / np.sum(y_train_balanced == 1)
+)
 clf = xgb.XGBClassifier(
     n_estimators=200,
     max_depth=6,
@@ -163,7 +186,10 @@ clf = xgb.XGBClassifier(
 # Train with eval set to monitor overfitting
 clf.fit(
     X_train_scaled, y_train_balanced,
-    eval_set=[(X_train_scaled, y_train_balanced), (X_test_scaled, y_test_holdout)],
+    eval_set=[
+        (X_train_scaled, y_train_balanced),
+        (X_test_scaled, y_test_holdout)
+    ],
     verbose=False
 )
 
@@ -172,24 +198,50 @@ y_train_pred = clf.predict(X_train_scaled)
 y_train_proba = clf.predict_proba(X_train_scaled)[:, 1]
 train_acc = accuracy_score(y_train_balanced, y_train_pred)
 train_bal_acc = balanced_accuracy_score(y_train_balanced, y_train_pred)
-train_recall_uncon = recall_score(y_train_balanced, y_train_pred, pos_label=0, zero_division=0)
+train_recall_uncon = recall_score(
+    y_train_balanced, y_train_pred,
+    pos_label=0, zero_division=0
+)
 
 # Test set performance (threshold 0.5 first)
 y_test_pred = clf.predict(X_test_scaled)
 y_test_proba = clf.predict_proba(X_test_scaled)[:, 1]
 test_acc = accuracy_score(y_test_holdout, y_test_pred)
 test_bal_acc = balanced_accuracy_score(y_test_holdout, y_test_pred)
-test_recall_uncon = recall_score(y_test_holdout, y_test_pred, pos_label=0, zero_division=0)
+test_recall_uncon = recall_score(
+    y_test_holdout, y_test_pred,
+    pos_label=0, zero_division=0
+)
 test_roc_auc = roc_auc_score(y_test_holdout, y_test_proba)
 
 print("RESULTS (threshold 0.5):")
 print("-" * 70)
-print(f"{'Metric':<30} {'Training':<15} {'Test (Holdout)':<15} {'Difference':<15}")
+print(
+    f"{'Metric':<30} {'Training':<15} "
+    f"{'Test (Holdout)':<15} {'Difference':<15}"
+)
 print("-" * 70)
-print(f"{'Accuracy':<30} {train_acc:<15.3f} {test_acc:<15.3f} {abs(train_acc-test_acc):<15.3f}")
-print(f"{'Balanced Accuracy':<30} {train_bal_acc:<15.3f} {test_bal_acc:<15.3f} {abs(train_bal_acc-test_bal_acc):<15.3f}")
-print(f"{'Recall (Unconscious)':<30} {train_recall_uncon:<15.3f} {test_recall_uncon:<15.3f} {abs(train_recall_uncon-test_recall_uncon):<15.3f}")
-print(f"{'ROC-AUC':<30} {'-':<15} {test_roc_auc:<15.3f} {'-':<15}")
+print(
+    f"{'Accuracy':<30} {train_acc:<15.3f} "
+    f"{test_acc:<15.3f} "
+    f"{abs(train_acc - test_acc):<15.3f}"
+)
+print(
+    f"{'Balanced Accuracy':<30} "
+    f"{train_bal_acc:<15.3f} "
+    f"{test_bal_acc:<15.3f} "
+    f"{abs(train_bal_acc - test_bal_acc):<15.3f}"
+)
+print(
+    f"{'Recall (Unconscious)':<30} "
+    f"{train_recall_uncon:<15.3f} "
+    f"{test_recall_uncon:<15.3f} "
+    f"{abs(train_recall_uncon - test_recall_uncon):<15.3f}"
+)
+print(
+    f"{'ROC-AUC':<30} {'-':<15} "
+    f"{test_roc_auc:<15.3f} {'-':<15}"
+)
 print()
 
 # Optimize threshold on test set
@@ -204,8 +256,14 @@ for threshold in np.arange(0.1, 0.95, 0.05):
         best_threshold = threshold
 
 y_test_pred_optimal = (y_test_proba >= best_threshold).astype(int)
-test_recall_uncon_opt = recall_score(y_test_holdout, y_test_pred_optimal, pos_label=0, zero_division=0)
-test_recall_con_opt = recall_score(y_test_holdout, y_test_pred_optimal, pos_label=1, zero_division=0)
+test_recall_uncon_opt = recall_score(
+    y_test_holdout, y_test_pred_optimal,
+    pos_label=0, zero_division=0
+)
+test_recall_con_opt = recall_score(
+    y_test_holdout, y_test_pred_optimal,
+    pos_label=1, zero_division=0
+)
 cm_test = confusion_matrix(y_test_holdout, y_test_pred_optimal)
 
 print(f"OPTIMIZED (threshold {best_threshold:.2f}):")
@@ -215,7 +273,7 @@ print(f"Recall (Unconscious): {test_recall_uncon_opt:.3f}")
 print(f"Recall (Conscious):   {test_recall_con_opt:.3f}")
 print()
 print("Confusion Matrix:")
-print(f"              Uncon  Consc")
+print("              Uncon  Consc")
 print(f"Actual Uncon  {cm_test[0,0]:5d}  {cm_test[0,1]:5d}")
 print(f"       Consc  {cm_test[1,0]:5d}  {cm_test[1,1]:5d}")
 print()
@@ -238,20 +296,34 @@ print()
 
 # Get feature importance
 importances = clf.feature_importances_
-feature_names = [f"eng_{i}" for i in range(34)] + [f"pca_{i}" for i in range(50)]
+feature_names = (
+    [f"eng_{i}" for i in range(34)]
+    + [f"pca_{i}" for i in range(50)]
+)
 
 # Top 15 features
 top_indices = np.argsort(importances)[-15:][::-1]
 print("Top 15 Most Important Features:")
 print("-" * 70)
 for rank, idx in enumerate(top_indices, 1):
-    print(f"{rank:2d}. {feature_names[idx]:<15} importance: {importances[idx]:.4f}")
+    print(
+        f"{rank:2d}. {feature_names[idx]:<15}"
+        f" importance: {importances[idx]:.4f}"
+    )
 
 print()
 eng_importance = importances[:34].sum()
 pca_importance = importances[34:].sum()
-print(f"Engineered features total importance: {eng_importance:.3f} ({eng_importance/(eng_importance+pca_importance)*100:.1f}%)")
-print(f"PCA connectivity total importance:    {pca_importance:.3f} ({pca_importance/(eng_importance+pca_importance)*100:.1f}%)")
+print(
+    f"Engineered features total importance: "
+    f"{eng_importance:.3f} "
+    f"({eng_importance/(eng_importance+pca_importance)*100:.1f}%)"
+)
+print(
+    f"PCA connectivity total importance:    "
+    f"{pca_importance:.3f} "
+    f"({pca_importance/(eng_importance+pca_importance)*100:.1f}%)"
+)
 print()
 
 if pca_importance > 0.3:
@@ -274,12 +346,12 @@ per_subject_scores = []
 for test_subject in unique_subjects[:10]:  # Check first 10 for speed
     test_mask = subject_ids == test_subject
     train_mask = ~test_mask
-    
+
     X_tr = X_combined[train_mask]
     y_tr = y[train_mask]
     X_te = X_combined[test_mask]
     y_te = y[test_mask]
-    
+
     # SMOTE
     n_min = np.sum(y_tr == 0)
     if n_min >= 2:
@@ -287,22 +359,26 @@ for test_subject in unique_subjects[:10]:  # Check first 10 for speed
         smote = SMOTE(random_state=42, k_neighbors=k)
         try:
             X_tr, y_tr = smote.fit_resample(X_tr, y_tr)
-        except:
+        except Exception:
             pass
-    
+
     # Train
     scaler = StandardScaler()
     X_tr_scaled = scaler.fit_transform(X_tr)
     X_te_scaled = scaler.transform(X_te)
-    
+
     clf_cv = xgb.XGBClassifier(
-        n_estimators=200, max_depth=6, learning_rate=0.1,
+        n_estimators=200, max_depth=6,
+        learning_rate=0.1,
         subsample=0.8, colsample_bytree=0.8,
-        scale_pos_weight=np.sum(y_tr==0)/np.sum(y_tr==1),
-        random_state=42, eval_metric='logloss', use_label_encoder=False
+        scale_pos_weight=(
+            np.sum(y_tr == 0) / np.sum(y_tr == 1)
+        ),
+        random_state=42, eval_metric='logloss',
+        use_label_encoder=False
     )
     clf_cv.fit(X_tr_scaled, y_tr, verbose=0)
-    
+
     # Test
     y_pred = clf_cv.predict(X_te_scaled)
     bal_acc = balanced_accuracy_score(y_te, y_pred)
@@ -312,7 +388,7 @@ mean_score = np.mean(per_subject_scores)
 std_score = np.std(per_subject_scores)
 cv_coef_variation = std_score / mean_score
 
-print(f"Balanced accuracy across 10 subjects:")
+print("Balanced accuracy across 10 subjects:")
 print(f"  Mean: {mean_score:.3f}")
 print(f"  Std:  {std_score:.3f}")
 print(f"  Coefficient of variation: {cv_coef_variation:.3f}")
@@ -343,10 +419,14 @@ X_perm, y_perm = smote_perm.fit_resample(X_train_holdout, y_permuted)
 X_perm_scaled = scaler.fit_transform(X_perm)
 
 clf_perm = xgb.XGBClassifier(
-    n_estimators=200, max_depth=6, learning_rate=0.1,
+    n_estimators=200, max_depth=6,
+    learning_rate=0.1,
     subsample=0.8, colsample_bytree=0.8,
-    scale_pos_weight=np.sum(y_perm==0)/np.sum(y_perm==1),
-    random_state=42, eval_metric='logloss', use_label_encoder=False
+    scale_pos_weight=(
+        np.sum(y_perm == 0) / np.sum(y_perm == 1)
+    ),
+    random_state=42, eval_metric='logloss',
+    use_label_encoder=False
 )
 clf_perm.fit(X_perm_scaled, y_perm, verbose=0)
 
@@ -413,10 +493,22 @@ if checks_passed >= 3:
     print("="*70)
     print()
     print("The model:")
-    print(f"  • Generalizes to unseen subjects (holdout test: {best_bal_acc:.1%})")
-    print(f"  • Uses meaningful features (connectivity + engineered)")
-    print(f"  • Performs consistently across folds (CV: {mean_score:.3f}±{std_score:.3f})")
-    print(f"  • Significantly better than chance (+{best_bal_acc-perm_bal_acc:.1%})")
+    print(
+        f"  • Generalizes to unseen subjects "
+        f"(holdout test: {best_bal_acc:.1%})"
+    )
+    print(
+        "  • Uses meaningful features "
+        "(connectivity + engineered)"
+    )
+    print(
+        f"  • Performs consistently across folds "
+        f"(CV: {mean_score:.3f}±{std_score:.3f})"
+    )
+    print(
+        f"  • Significantly better than chance "
+        f"(+{best_bal_acc - perm_bal_acc:.1%})"
+    )
     print()
     print("CLINICALLY READY FOR DEPLOYMENT")
 else:

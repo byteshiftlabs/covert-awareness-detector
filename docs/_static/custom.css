@@ -1,0 +1,28 @@
+/* Custom CSS to expand content area and reduce wasted space */
+
+/* Expand the main content area */
+.wy-nav-content {
+    max-width: 1200px !important;  /* Increased from default 800px */
+}
+
+/* Alternative: Remove max-width entirely for full-width content */
+/* Uncomment below to use full width available */
+/*
+.wy-nav-content {
+    max-width: none !important;
+}
+*/
+
+/* Reduce excessive padding on larger screens */
+@media screen and (min-width: 1400px) {
+    .wy-nav-content {
+        max-width: 1400px !important;
+    }
+}
+
+/* For very large screens, expand even more */
+@media screen and (min-width: 1800px) {
+    .wy-nav-content {
+        max-width: 1600px !important;
+    }
+}

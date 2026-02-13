@@ -3,7 +3,6 @@
 Quick test: Train on first 5 subjects to verify everything works.
 """
 
-import sys
 import numpy as np
 from data_loader import load_subject_all_conditions
 from features import extract_all_features
@@ -25,21 +24,24 @@ all_features = []
 for subject in test_subjects:
     print(f"  Loading {subject}...")
     all_fc = load_subject_all_conditions(subject)
-    
+
     for cond_idx in range(7):
         fc = all_fc[cond_idx]
         features = extract_all_features(fc)
-        
+
         features['subject'] = subject
         features['condition'] = cond_idx
         features['label'] = 1 if cond_idx in CONSCIOUS_CONDITIONS else 0
-        
+
         all_features.append(features)
 
 print(f"✓ Loaded {len(all_features)} samples\n")
 
 # Prepare ML data
-X = np.array([[f['isd'], f['efficiency'], f['clustering']] for f in all_features])
+X = np.array(
+    [[f['isd'], f['efficiency'], f['clustering']]
+     for f in all_features]
+)
 y = np.array([f['label'] for f in all_features])
 subject_ids = np.array([f['subject'] for f in all_features])
 

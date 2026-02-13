@@ -93,158 +93,18 @@ This project implements **deep learning models** to automate consciousness detec
 Approach Overview
 =================
 
-The Pipeline
-------------
+Our machine learning pipeline transforms fMRI brain scans into automated consciousness predictions:
 
-Our machine learning pipeline transforms raw fMRI data into consciousness predictions:
+1. **Input**: fMRI data from the Michigan Human Anesthesia Dataset (26 subjects under propofol sedation)
+2. **Feature Extraction**: Extract connectivity patterns and network metrics from brain activity
+3. **Classification**: Train machine learning models to predict conscious vs. unconscious states
+4. **Output**: Automated consciousness detection with interpretability
 
-.. code-block:: text
-
-   ┌─────────────────┐
-   │  fMRI BOLD Data │  (4D: x,y,z,time)
-   └────────┬────────┘
-            │
-            ▼
-   ┌─────────────────────────┐
-   │  Preprocessing          │
-   │  • Motion correction    │
-   │  • Spatial normalization│
-   │  • Denoising           │
-   └────────┬────────────────┘
-            │
-            ▼
-   ┌─────────────────────────┐
-   │  Feature Extraction     │
-   │  • Connectivity matrices│
-   │  • ROI time-series     │
-   │  • Network metrics     │
-   └────────┬────────────────┘
-            │
-            ▼
-   ┌─────────────────────────┐
-   │  ML Models             │
-   │  • Random Forest       │
-   │  • CNNs                │
-   │  • Graph Neural Nets   │
-   └────────┬────────────────┘
-            │
-            ▼
-   ┌─────────────────────────┐
-   │  Consciousness State   │
-   │  • Conscious           │
-   │  • Unconscious         │
-   │  • Covert Awareness    │
-   └─────────────────────────┘
-
-Input Data: fMRI Scans
-----------------------
-
-**What we analyze:**
-
-* **Resting-state fMRI**: Brain activity without external task
-* **Task-based fMRI**: Mental imagery during sedation (tennis, navigation)
-* **Temporal resolution**: ~2 seconds per brain volume
-* **Spatial resolution**: 2-3mm voxels
-* **Duration**: 5-10 minutes per recording
-
-**Data source**: Michigan Human Anesthesia fMRI Dataset (OpenNeuro ds006623)
-
-* 26 healthy volunteers
-* Graded propofol sedation (Awake → Mild → Moderate → Deep → Recovery)
-* Mental imagery tasks at each sedation level
-* Behavioral assessments (responsiveness tests)
-
-
-Feature Extraction
-------------------
-
-We extract multiple representations from fMRI data:
-
-**1. Functional Connectivity Matrices**
-
-Correlation between brain regions across time:
-
-.. math::
-
-   C_{ij} = \text{corr}(\text{ROI}_i(t), \text{ROI}_j(t))
-
-* Results in N×N matrix (N = number of brain regions)
-* Captures network-level organization
-* Basis for graph neural network approaches
-
-**2. ROI Time-Series**
-
-Raw temporal dynamics from brain regions:
-
-* Direct input to recurrent neural networks (LSTMs, GRUs)
-* Preserves temporal information
-* Enables sequence modeling
-
-**3. Graph-Theoretic Metrics**
-
-Network neuroscience features:
-
-* **Clustering coefficient**: Local network organization
-* **Path length**: Global network integration  
-* **Modularity**: Community structure
-* **Hub detection**: Critical network nodes
-
-**4. Spectral Features**
-
-Frequency-domain properties:
-
-* Power in different frequency bands
-* Coherence between regions
-* Non-linear dynamics
-
-
-Machine Learning Models
------------------------
-
-We implement and compare multiple architectures:
-
-**Baseline Models:**
-
-* **Logistic Regression**: Linear baseline on connectivity features
-* **Random Forest**: Non-linear baseline with feature importance
-* **SVM**: Support vector machines on engineered features
-
-**Deep Learning:**
-
-* **CNN (Convolutional Neural Networks)**: 
-  * Treat connectivity matrices as images
-  * Learn hierarchical spatial patterns
-  * Rotation/reflection invariant features
-
-* **RNN (Recurrent Neural Networks)**:
-  * Process time-series sequences
-  * Capture temporal dynamics
-  * LSTM/GRU architectures for long-term dependencies
-
-* **GNN (Graph Neural Networks)**:
-  * Directly model brain network structure
-  * Message passing between ROIs
-  * Preserve graph topology
-
-* **Hybrid Architectures**:
-  * Combine spatial + temporal + graph information
-  * Attention mechanisms for interpretability
-  * Multi-modal fusion
-
-
-Output: Consciousness Classification
--------------------------------------
-
-**Primary Task**: Binary Classification
-
-* **Class 0**: Unconscious (behaviorally unresponsive)
-* **Class 1**: Conscious (behaviorally responsive)
-
-**Secondary Tasks**:
-
-* **Multi-class**: Awake / Mild / Moderate / Deep / Recovery
-* **Covert detection**: Identifying hidden consciousness
-* **Regression**: Predicting sedation depth (propofol concentration)
+.. seealso::
+   
+   * :doc:`dataset` - Detailed information about the fMRI data
+   * :doc:`feature_extraction` - Complete feature extraction methods
+   * :doc:`model_architectures` - All model architectures and comparisons
 
 
 Relation to Original Research
@@ -313,130 +173,40 @@ This project provides the **machine learning engineering** to translate their fi
 Target Audience
 ===============
 
-This project is designed for multiple audiences:
+This project is designed for:
 
-Machine Learning Practitioners
-------------------------------
+**Machine Learning Practitioners**
+   Apply deep learning to neuroscience problems. No neuroscience background required - we explain the domain concepts.
 
-**What you'll find:**
+**Neuroscience Researchers**
+   Automated analysis of fMRI connectivity data using modern ML techniques. Replicate and extend published consciousness research.
 
-* End-to-end ML pipeline from data loading to deployment
-* Multiple model architectures to learn from
-* Comparison of classical vs. deep learning approaches
-* Best practices for neuroimaging ML
+**Clinical Researchers**
+   Research tools for consciousness assessment. Potential applications in anesthesia monitoring and disorders of consciousness.
 
-**Background needed:**
+**Data Scientists & Students**
+   Complete example of applied ML on challenging real-world data with graph neural networks and time-series analysis.
 
-* Python programming
-* Basic ML/DL concepts (CNNs, RNNs, training loops)
-* Familiarity with PyTorch or TensorFlow
-* No neuroscience background required - we explain!
-
-.. tip::
-   If you're an ML engineer curious about applying your skills to neuroscience, this is a great entry point. The code is well-documented and follows standard ML practices.
-
-
-Neuroscience Researchers
--------------------------
-
-**What you'll find:**
-
-* Automated analysis of fMRI connectivity data
-* Replication of Huang et al.'s manual analysis with ML
-* Extended analyses using modern neural networks
-* Tools for your own consciousness research
-
-**Background needed:**
-
-* Understanding of fMRI and connectivity analysis
-* Basic Python programming
-* Willingness to learn ML concepts (we provide tutorials)
-
-.. tip::
-   We provide bridges between neuroscience concepts and ML terminology. The models implement well-established neuroscience principles in a computational framework.
-
-
-Clinical Researchers
---------------------
-
-**What you'll find:**
-
-* Potential tools for consciousness assessment
-* Automated detection pipelines
-* Interpretable predictions for clinical decision-support
-* Validation on published dataset
-
-**Background needed:**
-
-* Clinical experience with disorders of consciousness or anesthesia
-* Understanding of neuroimaging
-* Basic data analysis skills
-
-.. warning::
-   **Important**: This is a research tool, not a medical device. All models require extensive validation before any clinical use. This code is for research purposes only.
-
-
-Data Scientists & AI Researchers
----------------------------------
-
-**What you'll find:**
-
-* Interesting domain for graph neural networks
-* Time-series classification challenges
-* Small dataset learning techniques
-* Interpretable AI in safety-critical domain
-
-**Background needed:**
-
-* Strong ML/DL foundations
-* Experience with neural networks
-* Interest in challenging real-world applications
-
-
-Students & Educators
---------------------
-
-**What you'll find:**
-
-* Complete example of applied ML project
-* Clean code structure following best practices
-* Educational documentation and tutorials
-* Opportunity to contribute to neuroscience
-
-**Background needed:**
-
-* Undergraduate-level ML knowledge
-* Python programming
-* Curiosity and willingness to learn
+.. danger::
+   **CRITICAL DISCLAIMER**: This is a research tool, NOT a medical device. This software:
+   
+   * Requires extensive clinical validation before any medical use
+   * Is provided for research and educational purposes only
+   * Should NEVER be used for patient diagnosis or treatment decisions
+   * Comes with NO WARRANTY of any kind
+   
+   **The authors and contributors accept NO RESPONSIBILITY OR LIABILITY for any misuse, harm, or adverse outcomes resulting from the use of this software. Use at your own risk.**
 
 
 Next Steps
 ==========
 
-Now that you understand what covert consciousness is and what this project does:
+Ready to get started?
 
-1. **Install the software**: See :doc:`installation` for setup instructions
-2. **Run your first model**: Follow the :doc:`quickstart` tutorial
-3. **Explore the API**: Check :doc:`api` for detailed documentation
-4. **Contribute**: See :doc:`contributing` to help improve the project
-
-
-.. seealso::
-   
-   **Additional Resources:**
-   
-   * :doc:`architecture` - Detailed model architectures
-   * :doc:`dataset` - Deep dive into the fMRI data
-   * :doc:`evaluation` - How we measure performance
-   * :doc:`deployment` - Using models in production
-
-
-Questions?
-----------
-
-* **GitHub Issues**: https://github.com/yourusername/consciousness_detector/issues
-* **Email**: Contact the maintainer
-* **Discussions**: Join our community forum
+1. :doc:`installation` - Set up the software
+2. :doc:`quickstart` - Run your first model
+3. :doc:`dataset` - Understand the fMRI data
+4. :doc:`model_architectures` - Explore the models
 
 .. note::
-   This is an open-source research project. We welcome questions, contributions, and collaboration!
+   This is an open-source research project. Questions and contributions welcome via GitHub!
