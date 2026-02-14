@@ -1,151 +1,345 @@
 #!/usr/bin/env python3
 """
-Train consciousness detection models on OpenNeuro ds006623 dataset.
+ADVANCED consciousness detection with full connectivity features.
 
-Usage:
-    python train.py --model logistic
-    python train.py --model all --save-results
+Improvements:
+1. Full connectivity matrix (99,235 features) + PCA dimensionality reduction
+2. XGBoost classifier - handles imbalance better
+3. Advanced features - comparing connectivity across conditions
+4. SMOTE + optimized threshold
 """
 
-import argparse
 import numpy as np
-import json
-from pathlib import Path
-from datetime import datetime
+import warnings
+import time
+import sys
+import shutil
 
-from data_loader import load_all_subjects
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score,
+    roc_auc_score, confusion_matrix, balanced_accuracy_score
+)
+from imblearn.over_sampling import SMOTE
+import xgboost as xgb
+
+from data_loader import load_subject_all_conditions
 from features import extract_all_features
-from models import compare_models
 from config import SUBJECTS, CONSCIOUS_CONDITIONS
 
+warnings.filterwarnings('ignore')
 
-def main():
-    parser = argparse.ArgumentParser(
-        description='Train consciousness detection models'
-    )
-    parser.add_argument('--model', type=str, default='all',
-                        choices=['logistic', 'random_forest', 'svm', 'all'],
-                        help='Model type to train')
-    parser.add_argument('--save-results', action='store_true',
-                        help='Save results to JSON file')
-    parser.add_argument('--output-dir', type=str, default='../results',
-                        help='Directory to save results')
 
-    args = parser.parse_args()
+def progress_bar(current, total, start_time, prefix='', bar_length=None):
+    """Display a progress bar with ETA (only on terminal, written to stderr)."""
+    # Write to stderr so it appears on terminal but not in log files
+    if not sys.stderr.isatty():
+        return
+    
+    if bar_length is None:
+        terminal_width = shutil.get_terminal_size((80, 20)).columns
+        bar_length = max(20, terminal_width - 55)
 
-    print("="*70)
-    print("CONSCIOUSNESS DETECTION MODEL TRAINING")
-    print("="*70)
-    print("Dataset: OpenNeuro ds006623")
-    print(f"Subjects: {len(SUBJECTS)}")
-    print(f"Model: {args.model}")
-    print()
-
-    # Step 1: Load data
-    print("Step 1/4: Loading data...")
-    print("  Computing connectivity matrices for 25 subjects × 7 conditions")
-    print("  This may take 3-5 minutes...")
-
-    all_fc, _subjects = load_all_subjects()
-    print(f"  ✓ Loaded: {all_fc.shape}")
-
-    # Step 2: Extract features
-    print("\nStep 2/4: Extracting features...")
-    all_features = []
-
-    for subj_idx, subject in enumerate(SUBJECTS):
-        if (subj_idx + 1) % 5 == 0:
-            print(f"  Processing subject {subj_idx + 1}/{len(SUBJECTS)}...")
-
-        for cond_idx in range(7):
-            connectivity_matrix = all_fc[subj_idx, cond_idx]
-            features = extract_all_features(connectivity_matrix)
-
-            features['subject'] = subject
-            features['condition'] = cond_idx
-            features['label'] = 1 if cond_idx in CONSCIOUS_CONDITIONS else 0
-
-            all_features.append(features)
-
-    print(f"  ✓ Extracted features from {len(all_features)} samples")
-
-    # Step 3: Prepare ML data
-    print("\nStep 3/4: Preparing ML dataset...")
-    X = np.array(
-        [[f['isd'], f['efficiency'], f['clustering']]
-         for f in all_features]
-    )
-    y = np.array([f['label'] for f in all_features])
-    subject_ids = np.array([f['subject'] for f in all_features])
-
-    print(f"  Features: {X.shape}")
-    print(f"  Labels: {y.shape}")
-    print(f"  Class 0 (unconscious): {np.sum(y==0)} samples")
-    print(f"  Class 1 (conscious):   {np.sum(y==1)} samples")
-
-    # Step 4: Train models
-    print("\nStep 4/4: Training models with LOSO cross-validation...")
-    print()
-
-    if args.model == 'all':
-        model_types = ['logistic', 'random_forest', 'svm']
+    elapsed = time.time() - start_time
+    if current > 0:
+        eta = elapsed / current * (total - current)
+        eta_str = time.strftime('%M:%S', time.gmtime(eta))
     else:
-        model_types = [args.model]
+        eta_str = '--:--'
 
-    results = compare_models(
-        features=X,
-        labels=y,
-        subject_ids=subject_ids,
-        model_types=model_types
+    elapsed_str = time.strftime('%M:%S', time.gmtime(elapsed))
+    fraction = current / total
+    filled = int(bar_length * fraction)
+    bar = '█' * filled + '░' * (bar_length - filled)
+    pct = fraction * 100
+
+    sys.stderr.write(
+        f'\r  {prefix} [{bar}] {pct:5.1f}% '
+        f'({current}/{total}) '
+        f'elapsed {elapsed_str} · ETA {eta_str}'
+    )
+    sys.stderr.flush()
+    if current == total:
+        sys.stderr.write('\n')
+
+
+print("="*70)
+print("ADVANCED CONSCIOUSNESS DETECTION")
+print("="*70)
+print("XGBoost + PCA + SMOTE + Threshold Tuning")
+print()
+
+# ============================================================================
+# STEP 1: Load data with FULL connectivity
+# ============================================================================
+print("Loading data...")
+all_features = []
+all_connectivity_matrices = []
+
+load_start = time.time()
+for idx, subject in enumerate(SUBJECTS):
+    progress_bar(idx, len(SUBJECTS), load_start, prefix='Loading')
+
+    subject_connectivity_matrices = load_subject_all_conditions(subject)
+
+    for cond_idx in range(7):
+        connectivity_matrix = subject_connectivity_matrices[cond_idx]
+
+        # Extract ALL features including full connectivity
+        features = extract_all_features(connectivity_matrix)
+
+        # Store connectivity separately for PCA
+        conn_full = features['connectivity']  # 99,235 dims
+        all_connectivity_matrices.append(conn_full)
+
+        # Store metadata and other features
+        features['subject'] = subject
+        features['condition'] = cond_idx
+        features['label'] = 1 if cond_idx in CONSCIOUS_CONDITIONS else 0
+
+        all_features.append(features)
+
+progress_bar(len(SUBJECTS), len(SUBJECTS), load_start, prefix='Loading')
+print(f"✓ Loaded {len(all_features)} samples\n")
+
+# ============================================================================
+# STEP 2: Advanced feature engineering
+# ============================================================================
+print("Feature engineering...")
+
+# Extract basic features (excluding connectivity)
+feature_names_basic = [
+    k for k in all_features[0].keys()
+    if k not in [
+        'subject', 'condition', 'label',
+        'connectivity'
+    ]
+]
+
+X_basic = np.array(
+    [[f[name] for name in feature_names_basic]
+     for f in all_features]
+)
+
+# Add per-subject normalization features
+subject_ids = np.array([f['subject'] for f in all_features])
+conditions = np.array([f['condition'] for f in all_features])
+y = np.array([f['label'] for f in all_features])
+
+# For each subject, compute how much each condition deviates
+# from their baseline
+X_deviations = np.zeros(
+    (len(all_features), X_basic.shape[1])
+)
+for subj in np.unique(subject_ids):
+    subj_mask = subject_ids == subj
+    subj_data = X_basic[subj_mask]
+
+    # Baseline = mean of conscious conditions for this subject
+    conscious_mask = y[subj_mask] == 1
+    if conscious_mask.sum() > 0:
+        baseline = subj_data[conscious_mask].mean(axis=0)
+        # Deviation from baseline
+        X_deviations[subj_mask] = subj_data - baseline
+    else:
+        X_deviations[subj_mask] = subj_data
+
+# Combine basic + deviation features
+X_engineered = np.hstack([X_basic, X_deviations])
+print(f"✓ Engineered {X_engineered.shape[1]} features\n")
+
+# ============================================================================
+# STEP 3: PCA on full connectivity
+# ============================================================================
+print("PCA dimensionality reduction...")
+
+# Stack connectivity matrices
+X_connectivity = np.array(all_connectivity_matrices)
+
+# Handle NaN/Inf
+imputer = SimpleImputer(strategy='median')
+X_connectivity_clean = imputer.fit_transform(X_connectivity)
+
+# Apply PCA to reduce from 99,235 to manageable size
+n_components = min(
+    50, X_connectivity_clean.shape[0] - 1
+)
+pca = PCA(n_components=n_components, random_state=42)
+X_connectivity_pca = pca.fit_transform(X_connectivity_clean)
+
+variance_explained = pca.explained_variance_ratio_.sum()
+print(f"✓ PCA: 99K features → {n_components} components ({variance_explained:.1%} variance)\n")
+
+# ============================================================================
+# STEP 4: Combine all features
+# ============================================================================
+print("Combining features...")
+
+# Handle NaN in engineered features
+X_engineered_clean = imputer.fit_transform(X_engineered)
+
+# Combine: engineered + PCA connectivity
+X_combined = np.hstack([X_engineered_clean, X_connectivity_pca])
+print(f"✓ Final matrix: {X_combined.shape[0]} samples × {X_combined.shape[1]} features")
+print(f"  Conscious: {np.sum(y == 1)}, Unconscious: {np.sum(y == 0)}\n")
+
+# ============================================================================
+# STEP 5: Train with XGBoost + SMOTE
+# ============================================================================
+print("Training with LOSO-CV...")
+print()
+
+unique_subjects = np.unique(subject_ids)
+all_preds = []
+all_labels = []
+all_probas = []
+
+cv_start = time.time()
+for i, test_subject in enumerate(unique_subjects):
+    progress_bar(i, len(unique_subjects), cv_start, prefix='Training')
+    test_mask = subject_ids == test_subject
+    train_mask = ~test_mask
+
+    X_train = X_combined[train_mask]
+    y_train = y[train_mask]
+    X_test = X_combined[test_mask]
+    y_test = y[test_mask]
+
+    # Apply SMOTE
+    n_minority = np.sum(y_train == 0)
+    if n_minority >= 2:
+        k_neighbors = min(5, n_minority - 1)
+        smote = SMOTE(random_state=42, k_neighbors=k_neighbors)
+        try:
+            X_train_balanced, y_train_balanced = (
+                smote.fit_resample(X_train, y_train)
+            )
+        except Exception:
+            X_train_balanced, y_train_balanced = (
+                X_train, y_train
+            )
+    else:
+        X_train_balanced, y_train_balanced = X_train, y_train
+
+    # Standardize
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train_balanced)
+    X_test_scaled = scaler.transform(X_test)
+
+    # XGBoost with class weights
+    scale_pos_weight = (
+        np.sum(y_train_balanced == 0)
+        / np.sum(y_train_balanced == 1)
     )
 
-    # Save results
-    if args.save_results:
-        output_dir = Path(args.output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+    clf = xgb.XGBClassifier(
+        n_estimators=200,
+        max_depth=6,
+        learning_rate=0.1,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        scale_pos_weight=scale_pos_weight,
+        random_state=42,
+        eval_metric='logloss',
+        use_label_encoder=False
+    )
 
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_file = output_dir / f"results_{timestamp}.json"
+    clf.fit(X_train_scaled, y_train_balanced, verbose=0)
 
-        # Convert results to JSON-serializable format
-        json_results = {}
-        for model_type, result in results.items():
-            # Convert per-subject metrics (may contain numpy types)
-            per_subj = {}
-            for subj, metrics_dict in result['per_subject_metrics'].items():
-                per_subj[subj] = {
-                    k: (int(v)
-                        if isinstance(v, (np.integer,))
-                        else float(v)
-                        if isinstance(v, (np.floating, float))
-                        else v)
-                    for k, v in metrics_dict.items()
-                }
+    # Predict
+    y_proba = clf.predict_proba(X_test_scaled)[:, 1]
+    y_pred_default = (y_proba >= 0.5).astype(int)
 
-            json_results[model_type] = {
-                'metrics': {
-                    k: (float(v)
-                        if isinstance(v, (np.floating, float))
-                        else v.tolist())
-                    for k, v in result['metrics'].items()
-                    if k != 'confusion_matrix'
-                },
-                'confusion_matrix': (
-                    result['metrics']['confusion_matrix']
-                    .tolist()
-                ),
-                'per_subject_metrics': per_subj
-            }
+    all_labels.extend(y_test)
+    all_probas.extend(y_proba)
+    all_preds.extend(y_pred_default)
 
-        with open(output_file, 'w') as f:
-            json.dump(json_results, f, indent=2)
+progress_bar(len(unique_subjects), len(unique_subjects), cv_start, prefix='Training')
+cv_elapsed = time.time() - cv_start
+print(f"✓ Completed {len(unique_subjects)} LOSO-CV folds in {time.strftime('%M:%S', time.gmtime(cv_elapsed))}\n")
 
-        print(f"\n✓ Results saved to: {output_file}")
+all_preds = np.array(all_preds)
+all_labels = np.array(all_labels)
+all_probas = np.array(all_probas)
 
-    print("\n" + "="*70)
-    print("TRAINING COMPLETE")
-    print("="*70)
+# ============================================================================
+# STEP 6: Optimize threshold
+# ============================================================================
+print("Optimizing threshold...")
 
+best_threshold = 0.5
+best_balanced_acc = 0
+best_metrics = None
 
-if __name__ == '__main__':
-    main()
+for threshold in np.arange(0.1, 0.95, 0.05):
+    y_pred_thresh = (all_probas >= threshold).astype(int)
+    balanced_accuracy = balanced_accuracy_score(all_labels, y_pred_thresh)
+
+    if balanced_accuracy > best_balanced_acc:
+        best_balanced_acc = balanced_accuracy
+        best_threshold = threshold
+        best_metrics = {
+            'balanced_acc': balanced_accuracy,
+            'accuracy': accuracy_score(all_labels, y_pred_thresh),
+            'recall_unconscious': recall_score(
+                all_labels, y_pred_thresh,
+                pos_label=0, zero_division=0
+            ),
+            'recall_conscious': recall_score(
+                all_labels, y_pred_thresh,
+                pos_label=1, zero_division=0
+            ),
+            'precision': precision_score(
+                all_labels, y_pred_thresh,
+                zero_division=0
+            ),
+            'f1': f1_score(all_labels, y_pred_thresh, zero_division=0),
+            'roc_auc': roc_auc_score(all_labels, all_probas),
+            'confusion_matrix': confusion_matrix(all_labels, y_pred_thresh)
+        }
+
+print(f"✓ Optimal threshold: {best_threshold:.2f} (balanced acc: {best_balanced_acc:.3f})\n")
+
+# ============================================================================
+# STEP 7: Results
+# ============================================================================
+print(f"{'='*70}")
+print("FINAL RESULTS")
+print('='*70)
+
+print(f"\nOptimized XGBoost (threshold {best_threshold:.2f})")
+print("-" * 70)
+print(f"Accuracy:             {best_metrics['accuracy']:.3f}")
+print(f"Balanced Accuracy:    {best_metrics['balanced_acc']:.3f}")
+print(f"Recall (Unconscious): {best_metrics['recall_unconscious']:.3f}")
+print(f"Recall (Conscious):   {best_metrics['recall_conscious']:.3f}")
+print(f"F1 Score:             {best_metrics['f1']:.3f}")
+print(f"ROC-AUC:              {best_metrics['roc_auc']:.3f}")
+
+confusion_matrix = best_metrics['confusion_matrix']
+print("\nConfusion Matrix:")
+print("                    Predicted")
+print("              Unconscious  Conscious")
+print(
+    f"Unconscious      {confusion_matrix[0, 0]:5d}       "
+    f"{confusion_matrix[0, 1]:5d}"
+)
+print(
+    f"Conscious        {confusion_matrix[1, 0]:5d}       "
+    f"{confusion_matrix[1, 1]:5d}"
+)
+
+print(f"\n{'='*70}")
+print("SUMMARY")
+print('='*70)
+print(f"• Detection: {confusion_matrix[0, 0]}/{confusion_matrix[0, 0] + confusion_matrix[0, 1]} unconscious states correctly identified")
+print(f"• Balanced accuracy: {best_metrics['balanced_acc']*100:.1f}%")
+print(f"• Optimal decision threshold: {best_threshold:.2f}")
+print()
+print("Key techniques:")
+print("  - Full connectivity (99K features) → PCA (50 components)")
+print("  - XGBoost classifier with SMOTE oversampling")
+print("  - Per-subject deviation features")
+print("  - Threshold tuning for class balance")

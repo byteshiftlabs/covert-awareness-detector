@@ -1,88 +1,27 @@
-# Consciousness State Detector - Core Dependencies
+# Covert Awareness Detector - Dependencies
+#
+# Install:  pip install -r requirements.txt
+# Optional: pip install -r requirements-dev.txt
 
-# ============================================================================
-# Core Scientific Computing
-# ============================================================================
+# ── Core Scientific Computing ───────────────────────────────────────────────
 numpy>=1.24.0
 scipy>=1.10.0
 pandas>=2.0.0
 
-# ============================================================================
-# Neuroimaging Analysis
-# ============================================================================
+# ── Neuroimaging ────────────────────────────────────────────────────────────
 nibabel>=5.0.0              # NIfTI file I/O
 nilearn>=0.10.0             # fMRI analysis and visualization
-nipype>=1.8.0               # Neuroimaging pipelines (optional)
 
-# ============================================================================
-# Machine Learning - Core
-# ============================================================================
+# ── Machine Learning ────────────────────────────────────────────────────────
 scikit-learn>=1.3.0         # Classical ML algorithms
-scipy>=1.10.0               # Statistical functions
+xgboost>=2.0.0              # Gradient boosting framework
+imbalanced-learn>=0.11.0    # Handle imbalanced datasets (SMOTE)
 
-# ============================================================================
-# Deep Learning
-# ============================================================================
-torch>=2.0.0                # PyTorch for neural networks
-torchvision>=0.15.0         # Computer vision utilities
-# tensorflow>=2.13.0        # Alternative (uncomment if needed)
-
-# ============================================================================
-# Graph Neural Networks
-# ============================================================================
-torch-geometric>=2.3.0      # GNN library for PyTorch
-networkx>=3.1               # Graph theory algorithms
-python-igraph>=0.10.0       # Fast graph analysis
-
-# ============================================================================
-# Visualization
-# ============================================================================
-matplotlib>=3.7.0           # Basic plotting
+# ── Visualization ───────────────────────────────────────────────────────────
+matplotlib>=3.7.0           # Plotting
 seaborn>=0.12.0             # Statistical visualization
-plotly>=5.14.0              # Interactive plots
-nilearn>=0.10.0             # Brain visualization (already listed above)
 
-# ============================================================================
-# Data Management
-# ============================================================================
-datalad>=0.18.0             # Dataset version control
-pybids>=0.16.0              # BIDS dataset handling
-h5py>=3.8.0                 # HDF5 file storage for preprocessed data
-
-# ============================================================================
-# Utilities
-# ============================================================================
+# ── Utilities ───────────────────────────────────────────────────────────────
 tqdm>=4.65.0                # Progress bars
 pyyaml>=6.0                 # Configuration files
-python-dotenv>=1.0.0        # Environment variables
 joblib>=1.3.0               # Parallel processing
-
-# ============================================================================
-# Development & Testing
-# ============================================================================
-pytest>=7.3.0               # Unit testing
-pytest-cov>=4.1.0           # Code coverage
-black>=23.3.0               # Code formatting
-flake8>=6.0.0               # Linting
-mypy>=1.3.0                 # Type checking
-ipython>=8.12.0             # Interactive shell
-jupyter>=1.0.0              # Jupyter notebooks
-ipykernel>=6.23.0           # Jupyter kernel
-
-# ============================================================================
-# Explainability & Interpretability
-# ============================================================================
-shap>=0.42.0                # SHAP values for model interpretation
-captum>=0.6.0               # PyTorch model interpretability
-
-# ============================================================================
-# Experiment Tracking (Optional)
-# ============================================================================
-wandb>=0.15.0               # Weights & Biases for experiment tracking
-tensorboard>=2.13.0         # TensorBoard logging
-
-# ============================================================================
-# Additional Scientific Tools
-# ============================================================================
-statsmodels>=0.14.0         # Statistical models
-pingouin>=0.5.3             # Statistical tests for neuroscience

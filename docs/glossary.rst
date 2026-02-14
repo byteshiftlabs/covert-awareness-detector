@@ -2,20 +2,34 @@
 Glossary
 ========
 
-A comprehensive guide to neuroscience and neuroimaging terms used throughout
-this documentation. Definitions are based on peer-reviewed neuroscience
-literature and encyclopedic sources.
+.. raw:: html
 
-.. contents:: Table of Contents
-   :depth: 2
-   :local:
+   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; color: white; margin-bottom: 30px;">
+   <h2 style="color: white; margin: 0;">📚 Comprehensive Terminology Guide</h2>
+   <p style="margin: 10px 0 0 0; opacity: 0.9;">Your reference for neuroscience, neuroimaging, and machine learning terms</p>
+   </div>
+
+.. note::
+   **About This Glossary**: All definitions are based on peer-reviewed neuroscience literature and encyclopedic sources. Terms are organized by topic for easy navigation.
 
 
-Neuroscience Fundamentals
-=========================
+----
 
-Core Concepts
--------------
+
+.. raw:: html
+
+   <div style="margin-top: 40px;"></div>
+
+🧠 Neuroscience Fundamentals
+=============================
+
+.. admonition:: Section Overview
+   :class: tip
+
+   Core concepts in consciousness research, neural activity, and brain function.
+
+💡 Core Concepts
+----------------
 
 Behavioral Response
 ^^^^^^^^^^^^^^^^^^^
@@ -36,6 +50,10 @@ Consciousness
 
 Covert Consciousness
 ^^^^^^^^^^^^^^^^^^^^^
+
+.. important::
+   **Key Concept**: This is the central phenomenon this project aims to detect.
+
 **Definition**: A dissociation between behavioral responsiveness and neural markers of awareness, where patients show brain activity consistent with conscious processing (e.g., following mental imagery commands) but exhibit no observable behavioral responses.
 
 **Also known as**: Covert awareness, hidden consciousness, cognitive motor dissociation.
@@ -54,11 +72,22 @@ Neural
 **Context in this project**: We analyze neural signatures (brain activity patterns) that indicate conscious awareness.
 
 
-Neuroimaging
-============
+----
 
-Data Acquisition
-----------------
+.. raw:: html
+
+   <div style="margin-top: 40px;"></div>
+
+🔬 Neuroimaging
+===============
+
+.. admonition:: Section Overview
+   :class: tip
+
+   Techniques and concepts for measuring brain activity using fMRI and related technologies.
+
+📡 Data Acquisition
+-------------------
 
 BOLD Signal (Blood-Oxygen-Level-Dependent)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -121,8 +150,8 @@ Voxel
 ^^^^^
 **Definition**: A volume element (3D pixel) representing the smallest distinguishable box-shaped part of a 3D image. In brain imaging, each voxel contains signal from neural populations.
 
-Preprocessing & Pipelines
---------------------------
+⚙️ Preprocessing & Pipelines
+-----------------------------
 
 fMRIPrep
 ^^^^^^^^
@@ -175,16 +204,29 @@ Preprocessing
 
 XCP-D
 ^^^^^
+
+.. tip::
+   **Data Source**: We use XCP-D derivatives directly - no need to reprocess raw fMRI!
+
 **Definition**: A postprocessing pipeline that takes fMRIPrep outputs and performs additional steps such as confound regression, bandpass filtering, and parcellation (extracting region-level timeseries from an atlas). It produces connectivity-ready derivatives.
 
-**Context in this project**: The dataset's XCP-D output directory contains the timeseries and motion files that our code loads directly.
+**Full name**: eXtensible Connectivity Pipeline - DCAN labs
+
+**What it does**:
+
+* Takes preprocessed fMRI from fMRIPrep
+* Applies denoising (removes motion artifacts, physiological noise)
+* Extracts ROI timeseries using brain atlases
+* Produces connectivity-ready data
+
+**Context in this project**: The dataset's XCP-D output directory contains the timeseries and motion files that our code loads directly. This is why we only need 1.8GB instead of 31.8GB of raw data.
 
 **References**:
 
 * Ciric, R., et al. (2018). Mitigating head motion artifact in functional connectivity MRI. *Nature Protocols*, 13, 2801-2826.
 
-Data Standards & Platforms
---------------------------
+🌐 Data Standards & Platforms
+------------------------------
 
 BIDS (Brain Imaging Data Structure)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -206,9 +248,20 @@ OpenNeuro
 
 ROI (Region of Interest)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. note::
+   **This Project**: We use **446 ROIs** from the 4S456Parcels atlas.
+
 **Definition**: A defined anatomical or functional brain region used as a unit of analysis. ROIs are typically derived from brain atlases that parcellate (divide) the brain into distinct regions based on anatomy, function, or connectivity patterns.
 
-**In this project**: We use 446 ROIs from the Schaefer-Gordon atlas to represent the whole brain as discrete regions.
+**Why use ROIs?**
+
+* Reduces dimensionality (millions of voxels → hundreds of regions)
+* Enables connectivity analysis between brain regions
+* Improves signal-to-noise ratio by averaging within regions
+* Provides anatomical interpretability
+
+**In this project**: We use 446 ROIs from the 4S456Parcels atlas to represent the whole brain as discrete regions. Each ROI's timeseries is extracted from the XCP-D derivatives.
 
 **References**:
 
@@ -216,11 +269,22 @@ ROI (Region of Interest)
 * Tzourio-Mazoyer, N., et al. (2002). Automated anatomical labeling of activations in SPM using a macroscopic anatomical parcellation of the MNI MRI single-subject brain. *NeuroImage*, 15(1), 273-289.
 
 
-Brain Connectivity
-==================
+----
 
-Connectivity Concepts
----------------------
+.. raw:: html
+
+   <div style="margin-top: 40px;"></div>
+
+🔗 Brain Connectivity
+=====================
+
+.. admonition:: Section Overview
+   :class: tip
+
+   Understanding how brain regions communicate and form functional networks.
+
+🌐 Connectivity Concepts
+------------------------
 
 Brain Network
 ^^^^^^^^^^^^^
@@ -269,15 +333,21 @@ Functional Connectivity
 
 ISD (Integration-Segregation Difference)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. important::
+   **Primary Feature**: This is the main metric used for consciousness detection in this project.
+
 **Definition**: A single number that captures the balance between integration and segregation in a brain network. It is computed as:
 
-::
+.. math::
 
-   ISD = efficiency - clustering
+   \text{ISD} = \text{efficiency} - \text{clustering}
 
 where *efficiency* measures how easily information can travel between any two brain regions, and *clustering* measures how much regions form tight local groups.
 
 **Context in this project**: The central feature used for consciousness classification. Higher ISD is associated with consciousness; loss of consciousness reduces ISD.
+
+**Clinical Significance**: ISD provides a quantitative biomarker for consciousness states.
 
 Network Topology
 ^^^^^^^^^^^^^^^^
@@ -294,8 +364,8 @@ Network Topology
 * Sporns, O. (2013). Network attributes for segregation and integration in the human brain. *Current Opinion in Neurobiology*, 23(2), 162-171.
 * Bullmore, E., & Sporns, O. (2009). Complex brain networks: graph theoretical analysis of structural and functional systems. *Nature Reviews Neuroscience*, 10(3), 186-198.
 
-Graph Theory Metrics
---------------------
+📊 Graph Theory Metrics
+-----------------------
 
 Clustering Coefficient
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -383,11 +453,22 @@ Path Length
 * Achard, S., & Bullmore, E. (2007). Efficiency and cost of economical brain functional networks. *PLoS Computational Biology*, 3(2), e17.
 
 
-Clinical Context
-================
+----
 
-Anesthesia & Sedation
----------------------
+.. raw:: html
+
+   <div style="margin-top: 40px;"></div>
+
+🏥 Clinical Context
+===================
+
+.. admonition:: Section Overview
+   :class: tip
+
+   Medical and clinical applications: anesthesia, sedation, and disorders of consciousness.
+
+💉 Anesthesia & Sedation
+------------------------
 
 Anesthesia
 ^^^^^^^^^^
@@ -440,8 +521,8 @@ Sedation Levels
 3. **Deep sedation**: Purposeful response following repeated/painful stimulation
 4. **General anesthesia**: No response even to painful stimulation
 
-Disorders of Consciousness
----------------------------
+🧬 Disorders of Consciousness
+------------------------------
 
 Disorders of Consciousness
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -507,8 +588,8 @@ Vegetative State
 * The Multi-Society Task Force on PVS (1994). Medical aspects of the persistent vegetative state. *New England Journal of Medicine*, 330(21), 1499-1508.
 * Monti, M. M., et al. (2010). Willful modulation of brain activity in disorders of consciousness. *New England Journal of Medicine*, 362(7), 579-589.
 
-Experimental Paradigm
----------------------
+🔬 Experimental Paradigm
+------------------------
 
 Mental Imagery
 ^^^^^^^^^^^^^^
@@ -521,11 +602,22 @@ Mental Imagery
 * Owen, A. M., et al. (2006). Detecting awareness in the vegetative state. *Science*, 313(5792), 1402.
 
 
-Machine Learning
-================
+----
 
-Core Concepts
--------------
+.. raw:: html
+
+   <div style="margin-top: 40px;"></div>
+
+🤖 Machine Learning
+===================
+
+.. admonition:: Section Overview
+   :class: tip
+
+   ML concepts, algorithms, and validation strategies used in consciousness detection.
+
+🎯 Core Concepts
+----------------
 
 Balanced Class Weights
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -561,12 +653,23 @@ Ground Truth
 
 LOSO-CV (Leave-One-Subject-Out Cross-Validation)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. important::
+   **Gold Standard**: LOSO-CV is the most rigorous validation for neuroimaging studies.
+
 **Definition**: A validation strategy where the model is trained on N-1 subjects and tested on the held-out subject, repeating for each subject. Provides unbiased estimate of generalization to new individuals.
 
-**Why critical for neuroimaging**: Ensures the model learns subject-independent patterns, not individual-specific idiosyncrasies.
+**How it works**:
 
-Classifiers
------------
+1. Hold out Subject 1, train on Subjects 2-25, test on Subject 1
+2. Hold out Subject 2, train on Subjects 1,3-25, test on Subject 2
+3. Repeat for all 25 subjects
+4. Average performance across all held-out subjects
+
+**Why critical for neuroimaging**: Ensures the model learns subject-independent patterns, not individual-specific idiosyncrasies. Prevents overfitting to individual brain anatomy.
+
+🔮 Classifiers
+--------------
 
 Logistic Regression
 ^^^^^^^^^^^^^^^^^^^
@@ -587,11 +690,22 @@ Support Vector Machine (SVM)
 **Context in this project**: One of the three classifiers. Uses the RBF kernel to capture non-linear relationships in the data.
 
 
-Brain Anatomy & Atlases
-=======================
+----
 
-Key Brain Regions
------------------
+.. raw:: html
+
+   <div style="margin-top: 40px;"></div>
+
+🧩 Brain Anatomy & Atlases
+==========================
+
+.. admonition:: Section Overview
+   :class: tip
+
+   Brain regions and atlases used for parcellation and analysis.
+
+🗺️ Key Brain Regions
+--------------------
 
 Anterior Insula
 ^^^^^^^^^^^^^^^
@@ -612,15 +726,27 @@ Default Mode Network (DMN)
 
 **References**:
 
-* Raichle, M. E., et al. (2001). A default mode of brain function. *Proceedings of the National Academy of Sciences*, 98(2), 676-682.
 * Buckner, R. L., et al. (2008). The brain's default network: anatomy, function, and relevance to disease. *Annals of the New York Academy of Sciences*, 1124(1), 1-38.
 
-Atlases
--------
+📍 Atlases
+----------
 
 4S456Parcels Atlas
 ^^^^^^^^^^^^^^^^^^
+
+.. admonition:: Composition
+   :class: hint
+
+   **400** Schaefer cortical regions + **56** Tian subcortical regions = **456** total parcels
+
 **Definition**: A whole-brain atlas that divides the brain into 456 regions by combining two established parcellations: 400 cortical regions from the Schaefer atlas and 56 subcortical regions from the Tian atlas.
+
+**Why this atlas?**
+
+* Comprehensive: covers both cortex and subcortex
+* Data-driven: based on functional connectivity patterns
+* High resolution: 456 regions provide detailed parcellation
+* Validated: widely used in neuroscience research
 
 **Context in this project**: The code uses the first 446 of the 456 parcels, following the approach of the reference paper.
 
@@ -645,11 +771,22 @@ Tian Atlas
 * Tian, Y., et al. (2020). Topographic organization of the human subcortex unveiled with functional connectivity gradients. *Nature Neuroscience*, 23(11), 1421-1432.
 
 
-Statistical Measures
-====================
+----
 
-Performance Metrics
--------------------
+.. raw:: html
+
+   <div style="margin-top: 40px;"></div>
+
+📈 Statistical Measures
+=======================
+
+.. admonition:: Section Overview
+   :class: tip
+
+   Metrics for evaluating model performance and measuring statistical relationships.
+
+✅ Performance Metrics
+----------------------
 
 AUC-ROC (Area Under the Receiver Operating Characteristic Curve)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -671,8 +808,8 @@ Specificity
 ^^^^^^^^^^^
 **Definition**: The proportion of actual negative cases correctly identified. Formally: TN / (TN + FP), where TN = true negatives, FP = false positives.
 
-Correlation & Association
--------------------------
+🔄 Correlation & Association
+----------------------------
 
 Covariance
 ^^^^^^^^^^
@@ -687,8 +824,19 @@ Pearson Correlation
 **In neuroimaging**: Measures how synchronously two brain regions' activity fluctuates over time. Values range from -1 (perfectly anti-correlated) through 0 (no relationship) to +1 (perfectly correlated).
 
 
-Acronyms Quick Reference
-=========================
+----
+
+.. raw:: html
+
+   <div style="margin-top: 40px;"></div>
+
+🔤 Acronyms Quick Reference
+===========================
+
+.. admonition:: Quick Lookup
+   :class: hint
+
+   Alphabetical list of acronyms used throughout the documentation.
 
 .. glossary::
 
@@ -741,10 +889,21 @@ Acronyms Quick Reference
       Unresponsive Wakefulness Syndrome (formerly vegetative state)
 
 
-Additional Resources
-====================
+----
 
-**Comprehensive References:**
+.. raw:: html
+
+   <div style="margin-top: 40px;"></div>
+
+📚 Additional Resources
+=======================
+
+.. admonition:: Further Reading
+   :class: seealso
+
+   Curated references for deeper exploration of consciousness research and neuroimaging.
+
+**📖 Comprehensive References:**
 
 1. **Neuroscience Reference Works:**
 
