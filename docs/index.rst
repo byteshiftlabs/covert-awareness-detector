@@ -40,7 +40,7 @@ consciousness signatures in fMRI data during propofol anesthesia.
    :maxdepth: 1
    :caption: Additional Resources
 
-   glossary
+   
 
 Indices and tables
 ==================

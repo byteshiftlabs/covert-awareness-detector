@@ -159,27 +159,13 @@ Subject sub-30 is excluded (missing timing data in the reference paper).
 References
 ==========
 
-**Original research papers:**
+**Original research paper:**
 
 - Huang et al. (2018). *Scientific Reports*.
   `DOI: 10.1038/s41598-018-31436-z <https://doi.org/10.1038/s41598-018-31436-z>`_
-
-- Huang et al. (2021). *Cell Reports*.
-  `DOI: 10.1016/j.celrep.2021.109081 <https://doi.org/10.1016/j.celrep.2021.109081>`_
-
-- Huang et al. (2021). *NeuroImage*.
-  `DOI: 10.1016/j.neuroimage.2021.118042 <https://doi.org/10.1016/j.neuroimage.2021.118042>`_
 
 **Preprocessing tools:**
 
 - BIDS specification: https://bids.neuroimaging.io/
 - fMRIPrep: https://fmriprep.org/
 - XCP-D: https://xcp-d.readthedocs.io/
-
-**Atlases:**
-
-- Schaefer et al. (2018). *Cerebral Cortex*.
-  `DOI: 10.1093/cercor/bhx179 <https://doi.org/10.1093/cercor/bhx179>`_
-
-- Glasser et al. (2016). *Nature*.
-  `DOI: 10.1038/nature18933 <https://doi.org/10.1038/nature18933>`_

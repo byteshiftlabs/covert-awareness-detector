@@ -7,12 +7,6 @@ What is Covert Consciousness?
 
 **Covert consciousness** (also called *covert awareness* or *hidden consciousness*) is a phenomenon where patients show neural signatures of awareness and can follow mental commands, yet exhibit **no behavioral response** - appearing completely unresponsive to external observers.
 
-.. image:: _static/covert_consciousness_diagram.png
-   :alt: Diagram showing covert consciousness
-   :align: center
-   :width: 600px
-
-*(Illustration: A patient appears behaviorally unresponsive but shows brain activation during mental imagery tasks)*
 
 Traditional Assessment Challenge
 ---------------------------------
@@ -25,10 +19,8 @@ Consider a patient under sedation:
 
 But what if their brain is actually processing the command and they're consciously following mental imagery instructions, just unable to produce a motor response?
 
-This dissociation between **neural awareness** and **behavioral responsiveness** is covert consciousness - first systematically characterized by Huang, Hudetz, Mashour and colleagues at the University of Michigan (2018).
+This dissociation between **neural awareness** and **behavioral responsiveness** is covert consciousness.
 
-.. note::
-   **Key Insight from Huang et al. (2018)**: Out of 26 healthy volunteers under propofol sedation, **5 subjects (19%)** showed clear brain activation patterns during mental imagery tasks (imagining playing tennis, spatial navigation) despite showing **zero behavioral response** when asked to squeeze a hand.
 
 Why This Matters
 ----------------
@@ -47,33 +39,6 @@ Why This Matters
 * **Ethical decision-making** - informing care decisions for patients with disorders of consciousness
 * **Optimizing recovery** - adjusting treatments based on neural markers
 
-
-The Problem This Project Solves
-================================
-
-Current Limitations
--------------------
-
-**Manual Analysis Challenges:**
-
-The groundbreaking research by Huang et al. established the scientific foundation through careful manual analysis of fMRI data:
-
-* **Time-intensive**: Each patient requires hours of expert analysis
-* **Subjective**: Requires trained neuroscientists to interpret connectivity patterns
-* **Not real-time**: Post-hoc analysis, not suitable for clinical monitoring
-* **Limited scalability**: Cannot be deployed across hospitals at scale
-
-**Clinical Gap:**
-
-While the neuroscience demonstrates that covert consciousness can be detected, there's no **automated, deployable system** that:
-
-1. Works across different subjects (generalization)
-2. Operates in real-time or near-real-time
-3. Provides interpretable predictions for clinicians
-4. Requires minimal expert supervision
-
-.. warning::
-   This is a critical gap: We have the science, but lack the engineering to translate it into clinical practice.
 
 
 Our Solution
@@ -98,13 +63,13 @@ Our machine learning pipeline transforms fMRI brain scans into automated conscio
 1. **Input**: fMRI data from the Michigan Human Anesthesia Dataset (26 subjects under propofol sedation)
 2. **Feature Extraction**: Extract connectivity patterns and network metrics from brain activity
 3. **Classification**: Train machine learning models to predict conscious vs. unconscious states
-4. **Output**: Automated consciousness detection with interpretability
+4. **Output**: Automated consciousness detection
 
 .. seealso::
    
-   * :doc:`dataset` - Detailed information about the fMRI data
-   * :doc:`feature_extraction` - Complete feature extraction methods
-   * :doc:`model_architecture` - All model architectures and comparisons
+   * :doc:`dataset` — dataset details
+   * :doc:`feature_extraction` — feature methods
+   * :doc:`model_architecture` — model details
 
 
 Relation to Original Research
@@ -117,31 +82,15 @@ This project **builds upon** the neuroscience established by:
 
 **Huang, Hudetz, Mashour et al.** at University of Michigan
 
-Key Publications:
+Key publication:
 
-1. **Huang et al. (2018)** - *Scientific Reports*
-   
-   *"Brain imaging reveals covert consciousness during behavioral unresponsiveness induced by propofol"*
-   
-   * Discovered covert consciousness in 19% of subjects
-   * Identified anterior insula as key region
-   * Established mental imagery paradigm
+- **Huang et al. (2018)** - *Scientific Reports*
 
-2. **Huang et al. (2021)** - *Cell Reports*
-   
-   *"Anterior insula regulates brain network transitions that gate conscious access"*
-   
-   * Insula connectivity predicts conscious access
-   * Dynamic network transitions during sedation
-   * Mechanistic understanding of consciousness gating
+  *"Brain imaging reveals covert consciousness during behavioral unresponsiveness induced by propofol"*
 
-3. **Huang et al. (2021)** - *NeuroImage*
-   
-   *"Asymmetric neural dynamics characterize loss and recovery of consciousness"*
-   
-   * Neural hysteresis in consciousness transitions
-   * Different pathways for loss vs. recovery
-   * Time-varying network dynamics
+  * Discovered covert consciousness in 19% of subjects
+  * Identified anterior insula as key region
+  * Established mental imagery paradigm
 
 .. note::
    **Credit**: All scientific discoveries, experimental design, and dataset creation belong to the University of Michigan team. Their MATLAB analysis code is available at: https://github.com/janghw4/Anesthesia-fMRI-functional-connectivity-and-balance-calculation
@@ -150,24 +99,10 @@ Key Publications:
 Our Contribution
 ----------------
 
-This project provides the **machine learning engineering** to translate their findings into deployable systems:
-
-**What's Original Here:**
-
-* **Python reimplementation** using modern ML frameworks (PyTorch/TensorFlow)
-* **Deep learning models** beyond traditional connectivity analysis
-* **Cross-subject generalization** for clinical deployment
-* **Automated detection** without manual analysis
-* **Production-ready code** with testing and documentation
-
-**What's Not Original:**
-
-* The neuroscientific discoveries (credit: Huang et al.)
-* The dataset and experimental design (credit: Michigan team)
-* The theoretical framework for covert consciousness (neuroscience literature)
+A concise, production‑ready Python pipeline that automates consciousness detection from fMRI (feature extraction, ML training, LOSO evaluation) with cross‑subject validation. The underlying neuroscience, experimental design, and dataset are credited to Huang et al. (2018).
 
 .. important::
-   **Philosophy**: We stand on the shoulders of giants. This project aims to **engineer solutions** based on **established neuroscience**, not to claim credit for scientific discoveries made by domain experts.
+   **Philosophy**: This project aims to **engineer solutions** based on **established neuroscience**, not to claim credit for scientific discoveries made by domain experts.
 
 
 Target Audience

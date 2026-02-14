@@ -71,13 +71,6 @@ Step 6: Install Dependencies
    pip install -r requirements.txt
 
 
-Step 7: Verify Installation
-----------------------------
-
-.. code-block:: bash
-
-   python -c "import numpy, scipy, pandas, nibabel, nilearn, sklearn, torch; print('✓ Installation successful')"
-
 
 Troubleshooting
 ===============
