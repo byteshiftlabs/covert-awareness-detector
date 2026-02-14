@@ -21,14 +21,8 @@ cd covert-awareness-detector
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 
-# Download dataset (~1.8 GB of preprocessed XCP-D derivatives)
-python src/download_dataset.py --output-dir ../datasets/openneuro/ds006623
-
-# Run the full training pipeline
+# Run the full training pipeline (downloads data and trains models)
 ./run_full_training.sh
-
-# Or train directly
-python src/train.py
 ```
 
 ## How It Works
@@ -36,63 +30,64 @@ python src/train.py
 The pipeline processes fMRI brain scans through several stages to classify consciousness states:
 
 ### 1. Data Input
+We start with preprocessed brain scans from the Michigan Human Anesthesia fMRI Dataset. Each scan captures brain activity across hundreds of brain regions over time—think of it as a recording of which brain areas are "lighting up" together at each moment. We work with data from people who were scanned while transitioning between conscious and unconscious states under controlled anesthesia.
+
 - **Source**: XCP-D preprocessed fMRI timeseries from OpenNeuro ds006623
-- **Format**: ~200 timepoints × 446 brain regions (ROIs) per scan
-- **Atlas**: 4S456Parcels (400 cortical + 56 subcortical regions)
-- **Subjects**: 25 individuals, 7 conditions each (conscious and unconscious states)
+- **What we have**: Brain activity measurements across 446 regions, recorded over time for 25 people in different states of consciousness
 
 ### 2. Feature Extraction
-- **Connectivity Matrices**: Compute Pearson correlations between all 446 ROI pairs → 99,235 connections
-- **ISD (Integration-Segregation Difference)**: 
-  - Regress out principal eigenvector to remove global signal
-  - Calculate multilevel efficiency (integration)
-  - Calculate multilevel clustering (segregation)  
-  - ISD = efficiency - clustering (key consciousness biomarker)
-- **Graph Metrics**: Network topology features (centrality, modularity, etc.)
-- **Statistical Features**: Connectivity distribution properties (skewness, kurtosis)
+This is where we transform raw brain signals into meaningful patterns that distinguish consciousness from unconsciousness.
 
-### 3. Dimensionality Reduction
-- **PCA (Principal Component Analysis)**: Reduces 99,280 features → 50 components
-- Retains essential variance while preventing overfitting on small sample size (n=25)
+**Connectivity Matrices**: We measure how synchronized different brain regions are with each other. If two regions consistently activate together, they're "connected." This creates a map of functional connections across the entire brain—essentially a snapshot of how the brain's regions communicate.
+
+**ISD (Integration-Segregation Difference)**: This is the key biomarker for consciousness. The theory is that conscious brains maintain a balance between two properties:
+  - *Integration*: how efficiently information flows across the entire brain network
+  - *Segregation*: how well distinct brain regions maintain specialized, local processing
+  
+When consciousness is lost, ISD decreases significantly. ISD quantifies this shift by computing the difference between these two properties (efficiency minus clustering).
+
+**Network Summary Statistics**: We also compute basic graph properties from the connectivity matrix—mean degree, strength, and density—to capture the overall topology of the brain network at each state.
+
+### 3. Dimensionality Reduction (PCA)
+Raw connectivity data is massive—nearly 100,000 individual connections between brain regions. Most of this information is redundant or noisy. **Principal Component Analysis (PCA)** is like finding the "essence" of the data: it identifies the main patterns that explain most of the variation, compressing the data down to the most important features while throwing away the noise. This prevents the model from overfitting to irrelevant details.
 
 ### 4. Model Training
-- **Algorithm**: XGBoost gradient boosting classifier
-- **Class Balance**: SMOTE oversampling to handle 6:1 unconscious:conscious imbalance
-- **Optimization**: Threshold tuning (optimal at 0.85) to maximize balanced accuracy
-- **Validation**: Leave-One-Subject-Out Cross-Validation (LOSO-CV) - 25 folds, one per subject
+We use **XGBoost**, a powerful machine learning algorithm that builds an "ensemble" of decision trees. Think of it as training many simple classifiers that each learn different aspects of the data, then combining their votes for a final prediction.
+
+**Handling Class Imbalance with SMOTE**: Our dataset has more unconscious examples than conscious ones (people spend more time sedated). SMOTE (Synthetic Minority Oversampling) creates synthetic examples of the underrepresented class, ensuring the model learns to recognize both states equally well rather than just guessing "unconscious" most of the time.
+
+**Leave-One-Subject-Out Cross-Validation**: We train the model on data from all subjects except one, then test it on the left-out subject. We repeat this for every subject. This ensures the model learns general patterns about consciousness, not just memorizing specific individuals' brain signatures.
 
 ### 5. Prediction
-- New scan → Same feature pipeline → Trained model → Probability score
-- Score > 0.85 → Unconscious | Score < 0.85 → Conscious
-- **Key Discovery**: Conscious states show higher ISD (balanced integration/segregation), while unconscious states show collapsed segregation
+Give the trained model a new brain scan, and it outputs a probability: how likely is this person to be conscious or unconscious? The model draws on the full set of features it learned during training—connectivity patterns compressed via PCA, ISD metrics, and network summary statistics—to make its prediction.
+
 
 ## Project Structure
 
 ```
 src/
-  config.py          # Dataset paths, subject list, scan parameters
-  data_loader.py     # Load timeseries, motion filtering, connectivity matrices
-  download_dataset.py # OpenNeuro dataset downloader
-  features.py        # ISD, graph metrics, connectivity feature extraction
-  models.py          # Classifiers and LOSO-CV evaluation
-  train.py           # Full training pipeline: XGBoost + PCA + SMOTE
-  validate_model.py  # Overfitting checks and permutation tests
+  config.py               # Dataset paths, subject list, scan parameters
+  data_loader.py          # Load timeseries, motion filtering, connectivity matrices
+  download_dataset.py     # OpenNeuro dataset downloader
+  features.py             # ISD, graph metrics, connectivity feature extraction
+  models.py               # Classifiers and LOSO-CV evaluation
+  train.py                # Full training pipeline: XGBoost + PCA + SMOTE
+  validate_model.py       # Overfitting checks and permutation tests
 
-docs/                       # Sphinx documentation
+docs/                     # Sphinx documentation
 
-run_full_training.sh    # Automated training pipeline
-run_quick_training.sh   # Fast 5-subject test
-requirements.txt        # Core dependencies
+run_full_training.sh      # Automated training pipeline (START HERE)
+requirements.txt          # Core dependencies
 ```
 
 ## Models
 
 | Model | Description |
 |---|---|
-| **XGBoost** (advanced) | Full connectivity + PCA + SMOTE + threshold tuning |
-| **SVM** | RBF kernel, balanced class weights |
-| **Random Forest** | 100 trees, balanced sampling |
-| **Logistic Regression** | L2-regularized baseline |
+| **XGBoost** (advanced) | Builds hundreds of small decision trees sequentially, where each tree corrects the mistakes of the previous ones. Uses PCA, SMOTE, and threshold tuning for the full pipeline. |
+| **SVM** | Finds the optimal boundary that separates conscious from unconscious states in high-dimensional feature space. Uses an RBF kernel to capture nonlinear patterns, with balanced class weights to handle imbalanced data. |
+| **Random Forest** | Trains 100 independent decision trees on random subsets of the data and averages their votes. Less prone to overfitting than a single tree, with balanced sampling to handle class imbalance. |
+| **Logistic Regression** | The simplest baseline — fits a linear boundary between classes and outputs a probability. L2 regularization prevents overfitting. Useful as a sanity check: if complex models can't beat this, the signal may be weak. |
 
 ## Acknowledgments
 
