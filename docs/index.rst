@@ -17,7 +17,6 @@ consciousness signatures in fMRI data during propofol anesthesia.
 
    introduction
    installation
-   quickstart
    dataset
 
 .. toctree::
@@ -27,7 +26,6 @@ consciousness signatures in fMRI data during propofol anesthesia.
    data_pipeline
    feature_extraction
    model_architectures
-   training_procedures
 
 .. toctree::
    :maxdepth: 2

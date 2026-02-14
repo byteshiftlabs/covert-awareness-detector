@@ -35,41 +35,13 @@ The process has three steps:
 Available Models
 ================
 
-The project implements three classifiers. All three are well-established
-machine-learning algorithms provided by the scikit-learn library.
+This codebase implements and runs a single default classifier: **XGBoost**.
+The pipeline applies PCA to the full connectivity matrix, uses SMOTE to
+address class imbalance, and performs threshold tuning after LOSO-CV.
 
-Logistic Regression
--------------------
-
-Draws a straight line (in high-dimensional space) that separates conscious
-from unconscious samples. Each feature gets a weight; the model sums up
-the weighted features and applies a threshold.
-
-**Interpretation**: The weights tell you which brain connections matter most
-for the classification. A large positive weight means that connection is
-associated with consciousness; a large negative weight means the opposite.
-
-
-Random Forest
--------------
-
-Builds many decision trees, each trained on a different random subset of the
-data and features. Each tree makes its own prediction, and the final answer
-is the majority vote.
-
-**Interpretation**: The model reports *feature importance* — how much each
-brain connection contributed to the classification across all trees.
-
-
-Support Vector Machine (SVM)
------------------------------
-
-Finds the boundary between conscious and unconscious samples that has the
-widest possible margin. It uses a mathematical trick (the RBF kernel) to
-draw curved boundaries when a straight line is not enough.
-
-**Interpretation**: The model identifies *support vectors* — the samples
-closest to the decision boundary that are most informative for classification.
+**Note:** references to Logistic Regression, Random Forest, and SVM have
+been removed from the documentation because those classifiers are not
+executed by the default training pipeline in this repository.
 
 
 Evaluation Method
@@ -96,9 +68,9 @@ Class Balancing
 ===============
 
 Conscious and unconscious samples may not appear in equal numbers. To
-prevent the model from being biased towards the more frequent class, all
-three classifiers use **balanced class weights**. This means the model
-pays more attention to the less frequent class during training.
+prevent class imbalance from biasing the classifier, the pipeline uses
+SMOTE oversampling and class weighting with XGBoost so the model learns
+from underrepresented conscious examples.
 
 
 How to Run
@@ -106,21 +78,11 @@ How to Run
 
 .. code-block:: bash
 
-   # Compare all three models with LOSO cross-validation
+   # Train and evaluate XGBoost with LOSO cross-validation
    python src/train.py
 
-This trains Logistic Regression, Random Forest, and SVM, prints
-per-subject results, and shows a comparison table at the end.
-
-To train a single model type:
-
-.. code-block:: python
-
-   from src.models import ConsciousnessClassifier
-
-   clf = ConsciousnessClassifier(model_type='random_forest')
-   clf.train(X_train, y_train)
-   metrics = clf.evaluate(X_test, y_test)
+This runs the default XGBoost pipeline (PCA + SMOTE + threshold tuning)
+using Leave-One-Subject-Out CV and prints per-subject results.
 
 
 Next Steps
@@ -128,4 +90,4 @@ Next Steps
 
 - See :doc:`feature_extraction` for details on how brain features are computed.
 - See :doc:`dataset` for information about the fMRI data.
-- See :doc:`quickstart` for a step-by-step tutorial.
+- See :doc:`installation` and `src/train.py` for instructions to run the default pipeline.

@@ -70,7 +70,6 @@ src/
   data_loader.py          # Load timeseries, motion filtering, connectivity matrices
   download_dataset.py     # OpenNeuro dataset downloader
   features.py             # ISD, graph metrics, connectivity feature extraction
-  models.py               # Classifiers and LOSO-CV evaluation
   train.py                # Full training pipeline: XGBoost + PCA + SMOTE
   validate_model.py       # Overfitting checks and permutation tests
 
@@ -80,14 +79,10 @@ run_full_training.sh      # Automated training pipeline (START HERE)
 requirements.txt          # Core dependencies
 ```
 
-## Models
+## Model
 
-| Model | Description |
-|---|---|
-| **XGBoost** (advanced) | Builds hundreds of small decision trees sequentially, where each tree corrects the mistakes of the previous ones. Uses PCA, SMOTE, and threshold tuning for the full pipeline. |
-| **SVM** | Finds the optimal boundary that separates conscious from unconscious states in high-dimensional feature space. Uses an RBF kernel to capture nonlinear patterns, with balanced class weights to handle imbalanced data. |
-| **Random Forest** | Trains 100 independent decision trees on random subsets of the data and averages their votes. Less prone to overfitting than a single tree, with balanced sampling to handle class imbalance. |
-| **Logistic Regression** | The simplest baseline — fits a linear boundary between classes and outputs a probability. L2 regularization prevents overfitting. Useful as a sanity check: if complex models can't beat this, the signal may be weak. |
+The default training pipeline (`src/train.py` / `./run_full_training.sh`) trains and validates the **XGBoost** classifier only (full connectivity + PCA + SMOTE + threshold tuning).
+
 
 ## Acknowledgments
 

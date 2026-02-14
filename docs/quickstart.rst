@@ -2,7 +2,7 @@
 Quick Start
 ===========
 
-This guide will walk you through your first end-to-end workflow: downloading data, training models, and interpreting results. You'll train a baseline model and a CNN to detect consciousness states from fMRI data.
+This guide will walk you through your first end-to-end workflow: downloading data, training the default XGBoost pipeline, and interpreting results. The repository's default workflow runs the **XGBoost** classifier (full connectivity + PCA + SMOTE + threshold tuning); other model archetypes are not executed by the default pipeline.
 
 .. contents:: Table of Contents
    :local:
@@ -169,35 +169,27 @@ Each "sample" is one fMRI scan session:
    print(f"✓ Saved visualization to: connectivity_example.png")
 
 
-Step 3: Run Baseline Model
-===========================
+Step 3: Train the default model
+================================
 
-Let's start with a simple Random Forest classifier to establish baseline performance.
-
-Training the Baseline
----------------------
+Train the repository's default XGBoost pipeline (PCA + SMOTE + LOSO-CV). This is the workflow executed by `./run_full_training.sh` and `src/train.py`.
 
 .. code-block:: bash
 
-   python src/train.py \
-       --model baseline \
-       --data-dir ./data \
-       --output-dir ./results/baseline \
-       --cross-validate \
-       --verbose
+   # recommended (automated)
+   ./run_full_training.sh
 
+   # or run training script directly
+   python src/train.py
 
-View Baseline Results
----------------------
+View training output and validate the model:
 
 .. code-block:: bash
 
-   python src/evaluate.py \
-       --model ./results/baseline/model.pkl \
-       --data-dir ./data \
-       --output-dir ./results/baseline/evaluation
-   
-   cat ./results/baseline/results.json
+   # Check the live log and results JSON
+   less training_*.log
+   python src/validate_model.py
+   ls -lh results/
 
 
 Step 4: Train CNN Model

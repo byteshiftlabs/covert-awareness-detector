@@ -204,9 +204,8 @@ Next Steps
 Ready to get started?
 
 1. :doc:`installation` - Set up the software
-2. :doc:`quickstart` - Run your first model
-3. :doc:`dataset` - Understand the fMRI data
-4. :doc:`model_architectures` - Explore the models
+2. :doc:`dataset` - Understand the fMRI data
+3. :doc:`model_architectures` - Explore the models
 
 .. note::
    This is an open-source research project. Questions and contributions welcome via GitHub!
