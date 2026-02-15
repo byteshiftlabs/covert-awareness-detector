@@ -16,7 +16,7 @@ Detects hidden awareness in behaviorally unresponsive patients using the [Michig
 
 ```bash
 # Clone and set up
-git clone https://github.com/cmelnulabs/covert-awareness-detector.git
+git clone https://github.com/byteshiftlabs/covert-awareness-detector.git
 cd covert-awareness-detector
 python3 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
@@ -85,26 +85,21 @@ The default training pipeline (`src/train.py` / `./run_full_training.sh`) trains
 **Original Research**: Huang, Hudetz, Mashour et al. — University of Michigan  
 **Dataset**: [OpenNeuro ds006623](https://openneuro.org/datasets/ds006623) (CC0 Public Domain)  
 **MATLAB Reference**: [Jang et al.](https://github.com/janghw4/Anesthesia-fMRI-functional-connectivity-and-balance-calculation)  
-**This Implementation**: Independent Python ML pipeline by cmelnulabs, built with AI assistance
+**This Implementation**: Independent Python ML pipeline by byteshiftlabs, built with AI assistance
 
-## Citation
+### Citation
 
-```bibtex
-@article{huang2018covert,
-  title     = {Brain imaging reveals covert consciousness during behavioral unresponsiveness},
-  author    = {Huang, Zirui and others},
-  journal   = {Scientific Reports},
-  volume    = {8},
-  pages     = {13195},
-  year      = {2018},
-  doi       = {10.1038/s41598-018-31436-z}
-}
-```
+This project builds upon the research published in:
+
+**Huang, Z., Tarnal, V., Fotiadis, P., Vlisides, P. E., Janke, E. L., Puglia, M., McKinney, A. M., Jang, H., Dai, R., Picton, P., Mashour, G. A., & Hudetz, A. G. (2026).** *An open fMRI resource for studying human brain function and covert consciousness under anesthesia.* **Scientific Data**, *13*(1), Article 127. https://doi.org/10.1038/s41597-025-06442-2
+
+The original paper is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/). All scientific discoveries, experimental design, and neuroimaging analysis methods are credited to the University of Michigan research team.
 
 ## License
 
-MIT License — see [LICENSE](LICENSE).  
-Dataset: CC0 (Public Domain).
+**This Software (Code)**: MIT License — see [LICENSE](LICENSE)  
+**Dataset**: CC0 (Public Domain) — [OpenNeuro ds006623](https://openneuro.org/datasets/ds006623)  
+**Original Research Paper**: CC BY-NC-ND 4.0 — see citation above
 
 ---
 
