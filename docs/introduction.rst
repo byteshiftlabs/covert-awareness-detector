@@ -5,14 +5,9 @@ Introduction
 What is Covert Consciousness?
 ==============================
 
-**Covert consciousness** (also called *covert awareness* or *hidden consciousness*) is a phenomenon where patients show neural signatures of awareness and can follow mental commands, yet exhibit **no behavioral response** - appearing completely unresponsive to external observers.
+**Covert consciousness** (also called *covert awareness* or *hidden consciousness*) is the presence of subjective experience in the absence of behavioral response (Huang et al., 2026).
 
-.. image:: _static/covert_consciousness_diagram.png
-   :alt: Diagram showing covert consciousness
-   :align: center
-   :width: 600px
-
-*(Illustration: A patient appears behaviorally unresponsive but shows brain activation during mental imagery tasks)*
+   Huang, Z., Tarnal, V., Fotiadis, P., Vlisides, P. E., Janke, E. L., Puglia, M., McKinney, A. M., Jang, H., Dai, R., Picton, P., Mashour, G. A., & Hudetz, A. G. (2026). An open fMRI resource for studying human brain function and covert consciousness under anesthesia. *Scientific Data*, *13*\(1), Article 127. https://doi.org/10.1038/s41597-025-06442-2
 
 Traditional Assessment Challenge
 ---------------------------------

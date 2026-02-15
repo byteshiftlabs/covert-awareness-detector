@@ -102,7 +102,7 @@ def multilevel_efficiency(connectivity_matrix: np.ndarray, thresholds: np.ndarra
         ml_efficiency.append(np.nanmean(eff))
 
     # Integrate using trapezoidal rule
-    return np.trapz(ml_efficiency, thresholds)
+    return np.trapezoid(ml_efficiency, thresholds)
 
 
 def multilevel_clustering(connectivity_matrix: np.ndarray, thresholds: np.ndarray) -> float:
@@ -151,7 +151,7 @@ def multilevel_clustering(connectivity_matrix: np.ndarray, thresholds: np.ndarra
 
         ml_clustering.append(np.nanmean(clust))
 
-    return np.trapz(ml_clustering, thresholds)
+    return np.trapezoid(ml_clustering, thresholds)
 
 
 def compute_isd(

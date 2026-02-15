@@ -84,7 +84,7 @@ def train_model(X_train, y_train, X_test=None, y_test=None):
         n_estimators=200, max_depth=6, learning_rate=0.1,
         subsample=0.8, colsample_bytree=0.8,
         scale_pos_weight=np.sum(y_train == 0) / np.sum(y_train == 1),
-        random_state=42, eval_metric='logloss', use_label_encoder=False
+        random_state=42, eval_metric='logloss'
     )
     clf.fit(X_train_scaled, y_train, verbose=0)
     

@@ -242,8 +242,7 @@ for i, test_subject in enumerate(unique_subjects):
         colsample_bytree=0.8,
         scale_pos_weight=scale_pos_weight,
         random_state=42,
-        eval_metric='logloss',
-        use_label_encoder=False
+        eval_metric='logloss'
     )
 
     clf.fit(X_train_scaled, y_train_balanced, verbose=0)
