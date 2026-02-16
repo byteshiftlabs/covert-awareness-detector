@@ -20,7 +20,7 @@ Consider a patient under sedation:
 
 But what if their brain is actually processing the command and they're consciously following mental imagery instructions, just unable to produce a motor response?
 
-This dissociation between **neural awareness** and **behavioral responsiveness** is covert consciousness.
+This separation between **neural awareness** and **behavioral responsiveness** is covert consciousness.
 
 
 Why This Matters
@@ -84,26 +84,26 @@ A production‑ready Python pipeline that automates consciousness detection from
 Target Audience
 ===============
 
-This project is designed for:
+This is a research implementation of fMRI-based consciousness detection using machine learning.
 
 **Machine Learning Practitioners**
-   Apply machine learning to neuroscience problems. No neuroscience background required - we explain the domain concepts.
+   Machine learning pipeline for fMRI data classification.
 
 **Neuroscience Researchers**
-   Automated analysis of fMRI connectivity data using modern ML techniques. Replicate and extend published consciousness research.
+   Analysis tools for fMRI connectivity data and consciousness research.
 
 **Clinical Researchers**
-   Research tools for consciousness assessment. Potential applications in anesthesia monitoring and disorders of consciousness.
+   Research tool for studying consciousness assessment methods.
 
 **Data Scientists & Students**
-   Example of applied ML on real-world data with functional connectivity and network analysis.
+   Applied ML implementation with functional connectivity and network analysis.
 
 .. danger::
    **CRITICAL DISCLAIMER**: This is a research tool, NOT a medical device. This software:
    
    * Requires extensive clinical validation before any medical use
    * Is provided for research and educational purposes only
-   * Should NEVER be used for patient diagnosis or treatment decisions
+   * Should not be used for patient diagnosis or treatment decisions unless validated and certified by appropriate regulatory authorities
    * Comes with NO WARRANTY of any kind
    
    **The authors and contributors accept NO RESPONSIBILITY OR LIABILITY for any misuse, harm, or adverse outcomes resulting from the use of this software. Use at your own risk.**
