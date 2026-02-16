@@ -1,11 +1,13 @@
 """
 Configuration for the consciousness detection pipeline.
 
-Derived directly from the paper's MATLAB code (main.m):
-  - 446 ROIs from 4S456Parcels atlas
+Derived from the reference MATLAB code (main.m) by Jang et al.:
+  - 446 ROIs from 4S456Parcels atlas (first 446 of 456; reason for exclusion undocumented)
   - xcp_d_without_GSR_bandpass preprocessing
   - 7 conditions: Wakeful Baseline, Imagery 1, PreLOR, LOR, Imagery 3 after ROR, Recovery Baseline, Rest 2
   - Motion censoring: FD column (col 8) < 0.8
+  
+Reference: https://github.com/janghw4/Anesthesia-fMRI-functional-connectivity-and-balance-calculation
 """
 
 from pathlib import Path
@@ -54,7 +56,7 @@ ROR_TIME = {
 SPECIAL_SUBJECTS = {"sub-29"}
 
 # ── Scan / atlas parameters ────────────────────────────────────────────────
-N_ROIS = 446               # first 446 of 456 parcels used by paper
+N_ROIS = 446               # first 446 of 456 from 4S456Parcels (per reference MATLAB code)
 ATLAS = "4S456Parcels"
 FD_THRESHOLD = 0.8          # framewise displacement cutoff
 FD_COLUMN = 7               # 0-indexed (column 8 in MATLAB 1-indexed)

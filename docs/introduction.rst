@@ -45,14 +45,13 @@ Why This Matters
 Our Solution
 ------------
 
-This project implements **deep learning models** to automate consciousness detection from fMRI data, building on the scientific foundations laid by the Michigan team.
+This project implements a **machine learning pipeline** to automate consciousness detection from fMRI data, building on the scientific foundations laid by the Michigan team.
 
 **What We Provide:**
 
 * **Automated classification** of consciousness states
-* **Cross-subject generalization** using neural networks
-* **Interpretable predictions** with attention mechanisms
-* **Production-ready code** for deployment
+* **Cross-subject generalization** using ensemble learning (XGBoost)
+* **Production-ready code** for research and analysis
 * **Extensible framework** for new models and analyses
 
 
@@ -61,9 +60,9 @@ Approach Overview
 
 Our machine learning pipeline transforms fMRI brain scans into automated consciousness predictions:
 
-1. **Input**: fMRI data from the Michigan Human Anesthesia Dataset (26 subjects under propofol sedation)
+1. **Input**: fMRI data from the Michigan Human Anesthesia Dataset (25 subjects under propofol sedation)
 2. **Feature Extraction**: Extract connectivity patterns and network metrics from brain activity
-3. **Classification**: Train machine learning models to predict conscious vs. unconscious states
+3. **Classification**: Train ensemble classifier (XGBoost) to predict conscious vs. unconscious states
 4. **Output**: Automated consciousness detection
 
 .. seealso::
@@ -76,7 +75,7 @@ Our machine learning pipeline transforms fMRI brain scans into automated conscio
 Our Contribution
 ================
 
-A concise, production‑ready Python pipeline that automates consciousness detection from fMRI (feature extraction, ML training, LOSO evaluation) with cross‑subject validation. The underlying neuroscience, experimental design, and dataset are credited to Huang et al. (2018).
+A production‑ready Python pipeline that automates consciousness detection from fMRI (feature extraction, ML training, LOSO evaluation) with cross‑subject validation. The underlying neuroscience, experimental design, and dataset are credited to Huang et al. (2026).
 
 .. important::
    **Philosophy**: This project aims to **engineer solutions** based on **established neuroscience**, not to claim credit for scientific discoveries made by domain experts.
@@ -88,7 +87,7 @@ Target Audience
 This project is designed for:
 
 **Machine Learning Practitioners**
-   Apply deep learning to neuroscience problems. No neuroscience background required - we explain the domain concepts.
+   Apply machine learning to neuroscience problems. No neuroscience background required - we explain the domain concepts.
 
 **Neuroscience Researchers**
    Automated analysis of fMRI connectivity data using modern ML techniques. Replicate and extend published consciousness research.
@@ -97,7 +96,7 @@ This project is designed for:
    Research tools for consciousness assessment. Potential applications in anesthesia monitoring and disorders of consciousness.
 
 **Data Scientists & Students**
-   Complete example of applied ML on challenging real-world data with graph neural networks and time-series analysis.
+   Example of applied ML on real-world data with functional connectivity and network analysis.
 
 .. danger::
    **CRITICAL DISCLAIMER**: This is a research tool, NOT a medical device. This software:

@@ -32,7 +32,7 @@ def load_timeseries(subject: str, task: str, run: int) -> pd.DataFrame:
     if not path.exists():
         raise FileNotFoundError(f"Missing timeseries: {path}")
 
-    # Load and take first 446 ROIs (paper uses 446 of 456)
+    # Load and take first 446 ROIs (reference MATLAB uses columns 1:446 of 456)
     df = pd.read_csv(path, sep='\t')
     return df.iloc[:, :N_ROIS]
 

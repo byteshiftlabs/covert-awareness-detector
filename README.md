@@ -29,26 +29,38 @@ pip install -r requirements.txt
 
 The pipeline processes fMRI brain scans through several stages to classify consciousness states:
 
-### 1. Data Input
-We start with preprocessed brain scans from the Michigan Human Anesthesia fMRI Dataset. Each scan captures brain activity across hundreds of brain regions over time—think of it as a recording of which brain areas are "lighting up" together at each moment. We work with data from people who were scanned while transitioning between conscious and unconscious states under controlled anesthesia.
+### 1. Data Input & Processing
 
-- **Source**: XCP-D preprocessed fMRI timeseries from OpenNeuro ds006623
-- **What we have**: Brain activity measurements across 446 regions, recorded over time for 25 people in different states of consciousness
+#### Dataset Authors' Pipeline (fMRIPrep → XCP-D)
+Raw fMRI scans were preprocessed and post-processed by dataset authors:
+
+- **fMRIPrep (Preprocessing)**: Motion correction, distortion correction, normalization to MNI space
+- **XCP-D (Post-processing)**: Brain parcellation into 456 regions (4S456Parcels atlas), regional timeseries extraction, motion quality metrics
+
+*We download these XCP-D derivatives (regional timeseries + motion parameters) from OpenNeuro.*
+
+#### Our Analysis Steps
+Additional processing for machine learning:
+
+1. **Motion filtering**: Remove timepoints where head movement (FD) ≥ 0.8 mm
+2. **ROI selection**: Use first 446 of 456 regions (following reference MATLAB implementation)
+3. **Temporal segmentation**: Split into 7 consciousness conditions using LOR/ROR timing
+4. **Connectivity**: Compute 446×446 Pearson correlation matrices (diagonal = 0)
 
 ### 2. Feature Extraction
-This is where we transform raw brain signals into meaningful patterns that distinguish consciousness from unconsciousness.
+This is where we transform processed regional timeseries into meaningful patterns that distinguish consciousness from unconsciousness.
 
-**Connectivity Matrices**: We measure how synchronized different brain regions are with each other. If two regions consistently activate together, they're "connected." This creates a map of functional connections across the entire brain—essentially a snapshot of how the brain's regions communicate.
+**Connectivity Matrices**: From the motion-filtered timeseries, we compute how synchronized different brain regions are with each other using Pearson correlation. If two regions consistently activate together, they're "connected." This creates a functional connectivity matrix (446×446)—essentially a snapshot of how the brain's regions communicate. The diagonal is set to zero (a region's self-correlation is uninformative).
 
-**ISD**: This is a key brain network metric computed as the difference between efficiency (how well information flows across the entire brain network) and clustering (how much brain regions form tight local groups). Higher ISD values are associated with conscious states.
+**ISD**: This is a brain network metric computed as the difference between efficiency (how well information flows across the entire brain network) and clustering (how much brain regions form tight local groups). Higher ISD values are associated with conscious states.
 
 **Network Summary Statistics**: We also compute basic graph properties from the connectivity matrix—mean degree, strength, and density—to capture the overall topology of the brain network at each state.
 
 ### 3. Dimensionality Reduction (PCA)
-Raw connectivity data is massive—nearly 100,000 individual connections between brain regions. Most of this information is redundant or noisy. **Principal Component Analysis (PCA)** is like finding the "essence" of the data: it identifies the main patterns that explain most of the variation, compressing the data down to the most important features while throwing away the noise. This prevents the model from overfitting to irrelevant details.
+Raw connectivity data is massive—nearly 100,000 individual connections between brain regions. Most of this information is redundant or noisy. **Principal Component Analysis (PCA)** identifies patterns that explain most of the variation, compressing the data down to fewer features while discarding noise. This prevents the model from overfitting to irrelevant details.
 
 ### 4. Model Training
-We use **XGBoost**, a powerful machine learning algorithm that builds an "ensemble" of decision trees. Think of it as training many simple classifiers that each learn different aspects of the data, then combining their votes for a final prediction.
+We use **XGBoost**, a machine learning algorithm that builds an "ensemble" of decision trees. It trains multiple classifiers that each learn different aspects of the data, then combines their outputs for a final prediction.
 
 **Handling Class Imbalance with SMOTE**: Our dataset has more unconscious examples than conscious ones (people spend more time sedated). SMOTE (Synthetic Minority Oversampling) creates synthetic examples of the underrepresented class, ensuring the model learns to recognize both states equally well rather than just guessing "unconscious" most of the time.
 

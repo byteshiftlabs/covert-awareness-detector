@@ -23,13 +23,12 @@ classifier. Feature extraction condenses them into a small set of numbers
 that summarise how the brain is organised.
 
 
-The Key Metric: ISD
-====================
+The ISD Metric
+==============
 
-The project's central feature is **ISD**, derived from the reference paper's
-MATLAB code. It measures the balance between two properties of brain networks:
+The project's primary feature is **ISD**, derived from the reference MATLAB code. It measures the balance between two properties of brain networks:
 
-- **Efficiency**: How easily information can travel between any two brain
+- **Efficiency**: Measure of how information can travel between any two brain
   regions. High efficiency means any region can communicate with any other
   region through short paths.
 
@@ -37,7 +36,7 @@ MATLAB code. It measures the balance between two properties of brain networks:
   neighbours are also connected to each other. High clustering means the
   brain has specialised modules.
 
-The ISD is simply:
+The ISD is:
 
 ::
 
@@ -52,16 +51,16 @@ How ISD Is Computed
 -------------------
 
 1. **Global signal removal**: The strongest shared pattern across all
-   regions is removed from the connectivity matrix. In simpler terms, we
-   subtract out background noise that's common to all brain regions, letting
-   us focus on the specific connections between pairs of regions.
+   regions is removed from the connectivity matrix. This subtracts out
+   background noise that's common to all brain regions, allowing focus on
+   the specific connections between pairs of regions.
 
 2. **Multilevel efficiency**: The connectivity matrix is converted into a
    series of binary networks at different thresholds (from very lenient to
    very strict). This means we test how well brain regions communicate at
    multiple sensitivity levels—from only counting the strongest connections
-   to including weaker ones. At each level, we measure how efficiently
-   information could travel between regions, then average these scores.
+   to including weaker ones. At each level, we measure the efficiency metric
+   (how information could travel between regions), then average these scores.
 
 3. **Multilevel clustering**: The same thresholding procedure is applied
    to the cleaned matrix (after global signal removal). Here we measure how

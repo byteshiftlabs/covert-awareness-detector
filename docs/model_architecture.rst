@@ -60,8 +60,7 @@ Leave-One-Subject-Out (LOSO) cross-validation:
 4. Repeat for every subject.
 
 This ensures the model is always tested on a person whose data it never
-saw during training, which is the most realistic evaluation for a clinical
-tool.
+saw during training.
 
 
 Class Balancing
@@ -69,8 +68,9 @@ Class Balancing
 
 Conscious and unconscious samples may not appear in equal numbers. To
 prevent class imbalance from biasing the classifier, the pipeline uses
-SMOTE oversampling and class weighting with XGBoost so the model learns
-from underrepresented conscious examples.
+SMOTE oversampling (generates synthetic examples of the minority class) and 
+scale_pos_weight parameter in XGBoost (which weights the minority class more 
+heavily during training).
 
 
 How to Run
