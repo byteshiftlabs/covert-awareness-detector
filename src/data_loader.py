@@ -9,39 +9,43 @@ From paper's main.m:
   5. Segment by LOR/ROR timing to create 7 conditions per subject
 """
 
+from typing import Tuple
+
 import numpy as np
 import pandas as pd
-from typing import Tuple
+from sklearn.decomposition import PCA
+from sklearn.impute import SimpleImputer
 
 from config import (
     XCP_DIR, N_ROIS, FD_COLUMN, FD_THRESHOLD,
     LOR_TIME, ROR_TIME, TRANSITION_BUFFER, SPECIAL_SUBJECTS,
-    SUBJECTS
+    SUBJECTS, N_CONDITIONS, CONSCIOUS_CONDITIONS, RANDOM_STATE,
+    PCA_N_COMPONENTS
 )
 
 
 def load_timeseries(subject: str, task: str, run: int) -> pd.DataFrame:
     """Load XCP-D timeseries TSV file."""
-    func_dir = XCP_DIR / subject / "func"
+    functional_directory = XCP_DIR / subject / "func"
     filename = (
         f"{subject}_task-{task}_run-{run}_"
         f"space-MNI152NLin2009cAsym_seg-4S456Parcels_stat-mean_timeseries.tsv"
     )
-    path = func_dir / filename
+    path = functional_directory / filename
 
     if not path.exists():
         raise FileNotFoundError(f"Missing timeseries: {path}")
 
     # Load and take first 446 ROIs (reference MATLAB uses columns 1:446 of 456)
-    df = pd.read_csv(path, sep='\t')
-    return df.iloc[:, :N_ROIS]
+    timeseries_data = pd.read_csv(path, sep='\t')
+    return timeseries_data.iloc[:, :N_ROIS]
 
 
 def load_motion(subject: str, task: str, run: int) -> pd.DataFrame:
     """Load motion parameters (framewise displacement)."""
-    func_dir = XCP_DIR / subject / "func"
+    functional_directory = XCP_DIR / subject / "func"
     filename = f"{subject}_task-{task}_run-{run}_motion.tsv"
-    path = func_dir / filename
+    path = functional_directory / filename
 
     if not path.exists():
         raise FileNotFoundError(f"Missing motion file: {path}")
@@ -63,9 +67,9 @@ def filter_by_motion(
     Returns:
         Filtered timeseries (n_good_timepoints, 446)
     """
-    fd = motion.iloc[:, FD_COLUMN].values
-    good_mask = fd < FD_THRESHOLD
-    return timeseries[good_mask]
+    framewise_displacement = motion.iloc[:, FD_COLUMN].values
+    good_timepoints_mask = framewise_displacement < FD_THRESHOLD
+    return timeseries[good_timepoints_mask]
 
 
 def compute_connectivity(timeseries: pd.DataFrame) -> np.ndarray:
@@ -78,9 +82,9 @@ def compute_connectivity(timeseries: pd.DataFrame) -> np.ndarray:
     if len(timeseries) == 0:
         return np.full((N_ROIS, N_ROIS), np.nan)
 
-    conn = np.corrcoef(timeseries.T)
-    np.fill_diagonal(conn, 0)  # paper sets diagonal to 0
-    return conn
+    connectivity = np.corrcoef(timeseries.T)
+    np.fill_diagonal(connectivity, 0)  # paper sets diagonal to 0
+    return connectivity
 
 
 def load_condition_0(subject: str) -> np.ndarray:
@@ -252,3 +256,84 @@ def load_all_subjects() -> Tuple[np.ndarray, list]:
         connectivity_matrices[i] = load_subject_all_conditions(subject)
 
     return connectivity_matrices, SUBJECTS
+
+
+def prepare_data(
+    progress_callback=None
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, PCA, SimpleImputer]:
+    """
+    Load all subjects and prepare feature matrix for ML training.
+
+    This function performs:
+    1. Load connectivity matrices for all subjects/conditions
+    2. Extract features (ISD, graph metrics, connectivity)
+    3. Compute per-subject deviation features
+    4. Apply PCA to connectivity features
+    5. Combine all features into final matrix
+
+    Args:
+        progress_callback: Optional callable(current, total, start_time, prefix)
+                          for progress reporting
+
+    Returns:
+        X_combined: (n_samples, n_features) feature matrix
+        y: (n_samples,) labels (1=conscious, 0=unconscious)
+        subject_ids: (n_samples,) subject IDs for each sample
+        pca: Fitted PCA transformer for connectivity features
+        imputer: Fitted SimpleImputer for handling NaN values
+    """
+    # Import here to avoid circular import
+    from features import extract_all_features
+
+    all_features = []
+    all_connectivity = []
+
+    for subject in SUBJECTS:
+        connectivity_matrices = load_subject_all_conditions(subject)
+        for condition_index in range(N_CONDITIONS):
+            connectivity_matrix = connectivity_matrices[condition_index]
+            features = extract_all_features(connectivity_matrix)
+            all_connectivity.append(features['connectivity'])
+            features.update({
+                'subject': subject,
+                'condition': condition_index,
+                'label': 1 if condition_index in CONSCIOUS_CONDITIONS else 0
+            })
+            all_features.append(features)
+
+    # Extract basic features (excluding metadata and connectivity)
+    feature_names = [
+        k for k in all_features[0].keys()
+        if k not in ['subject', 'condition', 'label', 'connectivity']
+    ]
+    X_basic = np.array([[f[name] for name in feature_names] for f in all_features])
+    subject_ids = np.array([f['subject'] for f in all_features])
+    y = np.array([f['label'] for f in all_features])
+
+    # Per-subject deviation features (how each condition deviates from baseline)
+    X_deviations = np.zeros_like(X_basic)
+    for current_subject in np.unique(subject_ids):
+        mask = subject_ids == current_subject
+        data = X_basic[mask]
+        conscious_mask = y[mask] == 1
+        if conscious_mask.sum() > 0:
+            baseline = data[conscious_mask].mean(axis=0)
+        else:
+            baseline = data.mean(axis=0)
+        X_deviations[mask] = data - baseline
+
+    # Handle NaN values
+    imputer = SimpleImputer(strategy='median')
+
+    # PCA on connectivity features (reduce 99K → PCA_N_COMPONENTS dimensions)
+    X_connectivity_clean = imputer.fit_transform(np.array(all_connectivity))
+    n_components = min(PCA_N_COMPONENTS, X_connectivity_clean.shape[0] - 1)
+    pca = PCA(n_components=n_components, random_state=RANDOM_STATE)
+    X_connectivity_pca = pca.fit_transform(X_connectivity_clean)
+
+    # Combine: basic features + deviation features + PCA connectivity
+    X_engineered = np.hstack([X_basic, X_deviations])
+    X_engineered_clean = imputer.fit_transform(X_engineered)
+    X_combined = np.hstack([X_engineered_clean, X_connectivity_pca])
+
+    return X_combined, y, subject_ids, pca, imputer

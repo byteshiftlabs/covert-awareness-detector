@@ -77,6 +77,36 @@ CONDITIONS = {
 
 CONSCIOUS_CONDITIONS = [0, 1, 2, 4, 5, 6]
 UNCONSCIOUS_CONDITIONS = [3]
+N_CONDITIONS = len(CONDITIONS)       # 7 conditions per subject
 
 # ── ML parameters ───────────────────────────────────────────────────────────
 RANDOM_STATE = 42
+DEFAULT_CLASSIFICATION_THRESHOLD = 0.5  # Default probability cutoff for classification
+
+# ── ISD calculation parameters ──────────────────────────────────────────────
+ISD_THRESHOLD_COUNT = 50             # Number of threshold values for multilevel metrics
+ISD_THRESHOLD_LOG_MIN = -3           # log10 of minimum threshold
+ISD_THRESHOLD_LOG_MAX = 0            # log10 of maximum threshold (10^0 = 1)
+NUMERICAL_EPSILON = 1e-10            # Small value to avoid division by zero
+
+# ── XGBoost hyperparameters ─────────────────────────────────────────────────
+XGBOOST_N_ESTIMATORS = 200
+XGBOOST_MAX_DEPTH = 6
+XGBOOST_LEARNING_RATE = 0.1
+XGBOOST_SUBSAMPLE = 0.8
+XGBOOST_COLSAMPLE_BYTREE = 0.8
+
+# ── PCA and threshold optimization ──────────────────────────────────────────
+PCA_N_COMPONENTS = 50                # Number of PCA components for connectivity
+THRESHOLD_SEARCH_MIN = 0.1           # Min probability threshold to search
+THRESHOLD_SEARCH_MAX = 0.95          # Max probability threshold to search
+THRESHOLD_SEARCH_STEP = 0.05         # Step size for threshold search
+
+# ── Validation parameters ───────────────────────────────────────────────────
+HOLDOUT_TEST_SUBJECTS = 5            # Number of subjects held out for validation
+CV_STABILITY_SUBJECTS = 10           # Number of subjects for CV stability check
+ENGINEERED_FEATURES_COUNT = 68       # Basic (34) + deviation (34) features
+HOLDOUT_ACCURACY_THRESHOLD = 0.65    # Min balanced accuracy for holdout pass
+PCA_IMPORTANCE_THRESHOLD = 0.25      # Min PCA feature importance for pass
+CV_VARIANCE_THRESHOLD = 0.30         # Max coefficient of variation for pass
+PERMUTATION_MARGIN = 0.15            # Min improvement over permuted for pass

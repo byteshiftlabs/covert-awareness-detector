@@ -8,9 +8,15 @@ Implements the paper's ISD (Integration-Segregation Difference) calculation:
   4. ISD = efficiency - clustering
 """
 
-import numpy as np
 from typing import Tuple
+
+import numpy as np
 from scipy.stats import skew, kurtosis
+
+from config import (
+    ISD_THRESHOLD_COUNT, ISD_THRESHOLD_LOG_MIN, ISD_THRESHOLD_LOG_MAX,
+    NUMERICAL_EPSILON
+)
 
 
 def regress_principal_eigenvector(connectivity_matrix: np.ndarray) -> np.ndarray:
@@ -37,13 +43,13 @@ def regress_principal_eigenvector(connectivity_matrix: np.ndarray) -> np.ndarray
         return connectivity_matrix
 
     # Eigendecomposition
-    eigvals, eigvecs = np.linalg.eig(connectivity_matrix_clean)
-    idx = np.argmax(eigvals)
-    lambda1 = eigvals[idx]
-    u1 = eigvecs[:, idx].real
+    eigenvalues, eigenvectors = np.linalg.eig(connectivity_matrix_clean)
+    principal_index = np.argmax(eigenvalues)
+    principal_eigenvalue = eigenvalues[principal_index]
+    principal_eigenvector = eigenvectors[:, principal_index].real
 
     # Regress out
-    connectivity_matrix_regressed = connectivity_matrix_clean - lambda1 * np.outer(u1, u1)
+    connectivity_matrix_regressed = connectivity_matrix_clean - principal_eigenvalue * np.outer(principal_eigenvector, principal_eigenvector)
 
     # Clip to non-negative (paper does max(0, ...))
     connectivity_matrix_regressed = np.maximum(0, connectivity_matrix_regressed)
@@ -84,7 +90,7 @@ def multilevel_efficiency(connectivity_matrix: np.ndarray, thresholds: np.ndarra
     # Zero diagonal
     np.fill_diagonal(connectivity_matrix_clean, 0)
 
-    ml_efficiency = []
+    multilevel_efficiency_values = []
 
     for threshold in thresholds:
         # Binary graph
@@ -93,18 +99,18 @@ def multilevel_efficiency(connectivity_matrix: np.ndarray, thresholds: np.ndarra
         # Compute distances (shortest paths)
         # Simplified: use 1/connectivity as distance
         with np.errstate(divide='ignore', invalid='ignore'):
-            dist = np.where(binary > 0, 1.0 / (connectivity_matrix_clean + 1e-10), np.inf)
-            np.fill_diagonal(dist, np.nan)
+            distance = np.where(binary > 0, 1.0 / (connectivity_matrix_clean + NUMERICAL_EPSILON), np.inf)
+            np.fill_diagonal(distance, np.nan)
 
         # Efficiency = mean of 1/distance
         with np.errstate(divide='ignore', invalid='ignore'):
-            eff = 1.0 / dist
-            eff[np.isinf(eff)] = np.nan
+            efficiency_values = 1.0 / distance
+            efficiency_values[np.isinf(efficiency_values)] = np.nan
 
-        ml_efficiency.append(np.nanmean(eff))
+        multilevel_efficiency_values.append(np.nanmean(efficiency_values))
 
     # Integrate using trapezoidal rule
-    return np.trapezoid(ml_efficiency, thresholds)
+    return np.trapezoid(multilevel_efficiency_values, thresholds)
 
 
 def multilevel_clustering(connectivity_matrix: np.ndarray, thresholds: np.ndarray) -> float:
@@ -134,7 +140,7 @@ def multilevel_clustering(connectivity_matrix: np.ndarray, thresholds: np.ndarra
 
     np.fill_diagonal(connectivity_matrix_clean, 0)
 
-    ml_clustering = []
+    multilevel_clustering_values = []
 
     for threshold in thresholds:
         # Binary graph
@@ -142,20 +148,20 @@ def multilevel_clustering(connectivity_matrix: np.ndarray, thresholds: np.ndarra
 
         # Clustering coefficient (simplified implementation)
         # Full implementation requires BCT toolbox's clustering_coef_bu
-        k = binary.sum(axis=1)  # degree
+        node_degrees = binary.sum(axis=1)  # degree
 
         # Triangles: A^2 .* A
-        A2 = binary @ binary
-        triangles = (A2 * binary).sum(axis=1)
+        adjacency_squared = binary @ binary
+        triangles = (adjacency_squared * binary).sum(axis=1)
 
         # Clustering = triangles / (k * (k-1))
         with np.errstate(divide='ignore', invalid='ignore'):
-            denom = k * (k - 1)
-            clust = np.where(denom > 0, triangles / denom, 0)
+            denominator = node_degrees * (node_degrees - 1)
+            clustering_coefficients = np.where(denominator > 0, triangles / denominator, 0)
 
-        ml_clustering.append(np.nanmean(clust))
+        multilevel_clustering_values.append(np.nanmean(clustering_coefficients))
 
-    return np.trapezoid(ml_clustering, thresholds)
+    return np.trapezoid(multilevel_clustering_values, thresholds)
 
 
 def compute_isd(
@@ -173,13 +179,13 @@ def compute_isd(
 
     Args:
         connectivity_matrix: (446, 446) connectivity matrix
-        thresholds: Threshold range (default: logspace(-3, 0, 50))
+        thresholds: Threshold range (default: logspace from config)
 
     Returns:
         (isd, efficiency, clustering) tuple
     """
     if thresholds is None:
-        thresholds = np.logspace(-3, 0, 50)
+        thresholds = np.logspace(ISD_THRESHOLD_LOG_MIN, ISD_THRESHOLD_LOG_MAX, ISD_THRESHOLD_COUNT)
 
     # Efficiency on original connectivity matrix
     connectivity_matrix_orig = connectivity_matrix.copy()
@@ -206,8 +212,8 @@ def extract_connectivity_features(connectivity_matrix: np.ndarray) -> np.ndarray
     Returns:
         Feature vector of length 446*445/2 = 99,235
     """
-    triu_idx = np.triu_indices(connectivity_matrix.shape[0], k=1)
-    return connectivity_matrix[triu_idx]
+    upper_triangle_indices = np.triu_indices(connectivity_matrix.shape[0], k=1)
+    return connectivity_matrix[upper_triangle_indices]
 
 
 def extract_all_features(connectivity_matrix: np.ndarray) -> dict:
@@ -242,7 +248,7 @@ def extract_all_features(connectivity_matrix: np.ndarray) -> dict:
     strengths = connectivity_matrix_abs.sum(axis=1)
 
     # Connectivity values for statistics
-    conn_values = extract_connectivity_features(connectivity_matrix_clean)
+    connectivity_values = extract_connectivity_features(connectivity_matrix_clean)
 
     return {
         # Paper's key metrics
@@ -258,16 +264,16 @@ def extract_all_features(connectivity_matrix: np.ndarray) -> dict:
         'density': degrees.sum() / (len(connectivity_matrix) * (len(connectivity_matrix) - 1)),
 
         # Statistical features
-        'mean_conn': np.mean(conn_values),
-        'std_conn': np.std(conn_values),
-        'skew_conn': skew(conn_values),
-        'kurtosis_conn': kurtosis(conn_values),
-        'q25_conn': np.percentile(conn_values, 25),
-        'median_conn': np.median(conn_values),
-        'q75_conn': np.percentile(conn_values, 75),
-        'max_conn': np.max(conn_values),
-        'min_conn': np.min(conn_values),
+        'mean_conn': np.mean(connectivity_values),
+        'std_conn': np.std(connectivity_values),
+        'skew_conn': skew(connectivity_values),
+        'kurtosis_conn': kurtosis(connectivity_values),
+        'q25_conn': np.percentile(connectivity_values, 25),
+        'median_conn': np.median(connectivity_values),
+        'q75_conn': np.percentile(connectivity_values, 75),
+        'max_conn': np.max(connectivity_values),
+        'min_conn': np.min(connectivity_values),
 
         # Full connectivity (99,235 dims) - use sparingly
-        'connectivity': conn_values,
+        'connectivity': connectivity_values,
     }
