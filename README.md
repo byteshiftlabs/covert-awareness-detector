@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Paper DOI](https://img.shields.io/badge/Paper-10.1038%2Fs41597--025--06442--2-blue.svg)](https://doi.org/10.1038/s41597-025-06442-2)
 [![DOI](https://img.shields.io/badge/Dataset-OpenNeuro%20ds006623-orange.svg)](https://openneuro.org/datasets/ds006623)
 
 Machine learning pipeline for detecting covert consciousness from fMRI functional connectivity during anesthesia.
@@ -92,18 +93,18 @@ requirements.txt          # Core dependencies
 The default training pipeline (`src/train.py` / `./run_full_training.sh`) trains and validates the **XGBoost** classifier only (connectivity + PCA + SMOTE).
 
 
-## Acknowledgments
+## Citation
 
-**Original Research**: Huang, Hudetz, Mashour et al. — University of Michigan  
-**Dataset**: [OpenNeuro ds006623](https://openneuro.org/datasets/ds006623) (CC0 Public Domain)  
-**MATLAB Reference**: [Jang et al.](https://github.com/janghw4/Anesthesia-fMRI-functional-connectivity-and-balance-calculation)  
-**This Implementation**: Independent Python ML pipeline by byteshiftlabs, built with AI assistance
+**This project implements the method described in:**
 
-### Citation
+Huang, Z., Tarnal, V., Fotiadis, P., Vlisides, P. E., Janke, E. L., Puglia, M., McKinney, A. M., Jang, H., Dai, R., Picton, P., Mashour, G. A., & Hudetz, A. G. (2026). *An open fMRI resource for studying human brain function and covert consciousness under anesthesia.* **Scientific Data**, *13*(1), Article 127.  
+**DOI**: [10.1038/s41597-025-06442-2](https://doi.org/10.1038/s41597-025-06442-2)
 
-This project builds upon the research published in:
-
-**Huang, Z., Tarnal, V., Fotiadis, P., Vlisides, P. E., Janke, E. L., Puglia, M., McKinney, A. M., Jang, H., Dai, R., Picton, P., Mashour, G. A., & Hudetz, A. G. (2026).** *An open fMRI resource for studying human brain function and covert consciousness under anesthesia.* **Scientific Data**, *13*(1), Article 127. https://doi.org/10.1038/s41597-025-06442-2
+**Resources**:
+- **Dataset**: [OpenNeuro ds006623](https://openneuro.org/datasets/ds006623) (CC0 Public Domain)
+- **MATLAB Reference**: [Jang et al. GitHub](https://github.com/janghw4/Anesthesia-fMRI-functional-connectivity-and-balance-calculation)
+- **Original Research**: University of Michigan (Huang, Hudetz, Mashour et al.)
+- **This Implementation**: Independent Python ML pipeline by byteshiftlabs, built with AI assistance
 
 The original paper is licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/). All scientific discoveries, experimental design, and neuroimaging analysis methods are credited to the University of Michigan research team.
 
